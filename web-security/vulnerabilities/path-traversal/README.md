@@ -84,6 +84,14 @@ On an authorized testing environment, I may test whether the application accepts
 If the request fails, I try to understand why. The application may block a specific pattern, normalize the path, restrict access to an allowed directory, or lack operating system permissions to read the requested file.
 A successful test should use the minimum amount of sensitive data required to prove the vulnerability.
 
+## Classification
+
+- **Common name:** Path Traversal
+- **Also known as:** Directory Traversal or File Path Traversal
+- **OWASP Top 10:2025:** A01 — Broken Access Control
+- **CWE:** CWE-22 — Improper Limitation of a Pathname to a Restricted Directory
+- **OWASP WSTG:** Testing Directory Traversal File Include
+
 ## Labs completed
 
 - PortSwigger — File path traversal, simple case
