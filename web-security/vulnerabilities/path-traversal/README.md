@@ -84,8 +84,11 @@ On an authorized testing environment, I may test whether the application accepts
 If the request fails, I try to understand why. The application may block a specific pattern, normalize the path, restrict access to an allowed directory, or lack operating system permissions to read the requested file.
 A successful test should use the minimum amount of sensitive data required to prove the vulnerability.
 
-## References
+## Labs completed
 
+- PortSwigger — File path traversal, simple case
+
+## References
 - [PortSwigger Web Security Academy — Path traversal](https://portswigger.net/web-security/file-path-traversal)
 - [PortSwigger Web Security Academy — Path traversal learning path](https://portswigger.net/web-security/learning-paths/path-traversal)
 - [PortSwigger — File path traversal vulnerability](https://portswigger.net/kb/issues/00100300_file-path-traversal)
