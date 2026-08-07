@@ -60,7 +60,6 @@ Myp4$$w0rd
 When users are required to change their password regularly, they may also make only small changes, such as replacing one character or increasing a number.
 These predictable habits make brute-force attacks more effective because attackers can test likely variations instead of trying every possible combination.
 
-
 ### Username enumeration
 Username enumeration happens when an application responds differently depending on whether a username exists.
 This often appears on login pages. For example, the application may return one message for an unknown username and another message for a valid username with an incorrect password.
@@ -74,14 +73,119 @@ Possible differences may include:
 - Different redirects
 - Different account lockout behavior
 
+### Two-factor authentication bypass
+Two-factor authentication can sometimes be bypassed when the application does not correctly verify that the second authentication step has been completed.
+For example, a user may first enter a valid username and password, then be redirected to a page asking for a verification code.
+If the application already considers the user authenticated after the password step, it may be possible to directly access pages that should only be available after completing 2FA.
+This happens when the server protects the verification page, but does not verify the 2FA state again before allowing access to protected resources.
+The application should only create a fully authenticated session after all required authentication steps have been successfully completed.
+
 ## Impact
+Authentication vulnerabilities can allow attackers to access accounts they do not own.
+Possible impacts include:
+- Account takeover
+- Access to private user data
+- Unauthorized actions performed as another user
+- Access to privileged or administrator accounts
+- Bypassing multi-factor authentication
+- Changing passwords or account settings
+- Accessing sensitive business information
+- Financial, legal, or reputational damage
+
+The impact depends on the privileges of the compromised account and the type of application.
+If an administrator account is compromised, the attacker may gain access to sensitive functions and data across the entire application.
+Authentication vulnerabilities mainly affect confidentiality and integrity, but they can also affect availability if the compromised account can delete data, disable users, or change critical settings.
 
 ## Prevention
+Authentication should be designed so that attackers cannot easily guess credentials, discover valid accounts, or bypass required authentication steps.
+The application should:
+- Enforce strong password policies
+- Encourage long and unique passwords instead of only requiring predictable complexity rules
+- Rate-limit repeated login attempts
+- Add temporary delays or lockouts after too many failed attempts
+- Use multi-factor authentication for sensitive accounts or actions
+- Make sure all authentication steps are completed before creating a fully authenticated session
+- Return similar error messages for valid and invalid usernames
+- Avoid exposing usernames or email addresses unnecessarily
+- Protect password reset and account recovery mechanisms
+- Store passwords securely using strong password hashing
+- Monitor and log suspicious authentication attempts
+
+For example, a login page should not reveal whether the username exists by returning different error messages such as `Invalid username` and `Incorrect password`.
+Multi-factor authentication must also be enforced on the server side. A user should not be able to access protected pages until every required authentication step has been successfully completed.
 
 ## Detection and testing
+I first identify all authentication-related features in the application, such as:
+- Login pages
+- Registration forms
+- Password reset functions
+- Multi-factor authentication
+- Account recovery
+- Session creation and logout
 
+I then observe how the application reacts to valid and invalid authentication attempts.
+Using Burp Suite, I intercept authentication requests and compare differences such as:
+- Error messages
+- HTTP status codes
+- Response length
+- Redirects
+- Response time
+- Cookies or session tokens
+
+For username enumeration, I test whether the application responds differently when the username exists but the password is incorrect.
+For brute-force protection, I check whether repeated failed login attempts are limited, delayed, blocked, or monitored.
+I also verify whether authentication state is correctly enforced. For example, after completing only the password step of a multi-factor login, I test whether protected pages can still be accessed before the second factor is completed.
+I pay particular attention to:
+- User-controlled authentication parameters
+- Predictable usernames
+- Weak or inconsistent error messages
+- Missing rate limiting
+- Weak account lockout mechanisms
+- Password reset flows
+- Multi-factor authentication bypasses
+- Session behavior before and after authentication
+
+A successful test occurs when the application reveals useful authentication information, allows too many automated attempts, or grants access without completing all required authentication steps.
 ## Classification
+- **Common name:** Authentication Vulnerabilities
+- **OWASP Top 10:2025:** A07 — Authentication Failures
+- **General CWE family:** CWE-287 — Improper Authentication
+- **OWASP WSTG category:** Authentication Testing
+More specific CWE identifiers may apply depending on the exact vulnerability:
+- **CWE-307:** Improper Restriction of Excessive Authentication Attempts
+- **CWE-204:** Observable Response Discrepancy
+- **CWE-308:** Use of Single-factor Authentication
+- **CWE-613:** Insufficient Session Expiration
 
 ## Labs completed
+### PortSwigger — Username enumeration via different responses
+- **Difficulty:** Apprentice
+- **Vulnerability:** Username enumeration / brute-force
+- **Result:** Solved
+- **Tool used:** Burp Suite Intruder
+
+The login page returned different responses depending on whether the username was valid.
+By using Burp Intruder with a list of candidate usernames, I identified a valid account because the response was different from the others. Invalid usernames returned `Invalid username`, while the valid username returned `Incorrect password`.
+I then kept the valid username and used a password wordlist to test possible passwords. One request returned a different HTTP status code (`302` instead of `200`), which indicated a successful login.
+This lab demonstrates how small differences in error messages, response length, or HTTP status codes can reveal valid usernames and make password brute-force attacks much more efficient.
+It also shows why authentication responses should be as consistent as possible and why login endpoints need protection against repeated automated attempts.
+
+### PortSwigger — 2FA simple bypass
+- **Difficulty:** Apprentice
+- **Vulnerability:** Two-factor authentication bypass
+- **Result:** Solved
+
+The application asked for a 2FA verification code after the password step, but it did not correctly enforce this second authentication step before allowing access to the account page.
+After logging in with valid credentials, it was possible to directly access the protected account page without entering the verification code.
+This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been completed.
 
 ## References
+- [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
+- [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
+- [PortSwigger Web Security Academy — Multi-factor authentication](https://portswigger.net/web-security/authentication/multi-factor)
+- [OWASP Top 10:2025 — A07: Authentication Failures](https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/)
+- [OWASP Web Security Testing Guide — Authentication Testing](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/04-Authentication_Testing/README)
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+- [OWASP Multifactor Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)
+- [MITRE — CWE-287: Improper Authentication](https://cwe.mitre.org/data/definitions/287.html)
+- [MITRE — CWE-307: Improper Restriction of Excessive Authentication Attempts](https://cwe.mitre.org/data/definitions/307.html)
