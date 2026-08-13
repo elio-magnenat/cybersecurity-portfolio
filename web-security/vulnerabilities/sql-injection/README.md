@@ -1,0 +1,165 @@
+# SQL Injection
+SQL injection (SQLi) is a web vulnerability that allows an attacker to interfere with the SQL queries an application sends to its database.
+If user-controlled input is included inside a database query without being handled safely, an attacker may be able to change the meaning of the query.
+This can allow an attacker to access data that should normally be hidden, including information belonging to other users or sensitive application data.
+Depending on the vulnerability, an attacker may also be able to modify or delete data stored in the database.
+In more serious cases, SQL injection can affect the underlying server or other back-end systems, and may sometimes be used to cause denial-of-service conditions.
+
+## Common vulnerable patterns
+
+### Retrieving hidden data
+SQL injection can allow an attacker to modify a `WHERE` clause and retrieve data that the application normally hides.
+For example, an application may use a query like:
+
+```sql
+SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+```
+
+The condition `released = 1` ensures that only released products are displayed.
+If the application directly includes user-controlled input in the query, an attacker may inject SQL syntax such as:
+
+```text
+Gifts'--
+```
+
+This can produce a query like:
+
+```sql
+SELECT * FROM products WHERE category = 'Gifts'--' AND released = 1
+```
+
+In SQL, `--` starts a comment, so the rest of the query is ignored. This removes the `released = 1` condition and can expose products that should remain hidden.
+Another example is:
+
+```text
+Gifts' OR 1=1--
+```
+
+This can produce:
+
+```sql
+SELECT * FROM products WHERE category = 'Gifts' OR 1=1--' AND released = 1
+```
+
+Because `1=1` is always true, the query may return all products.
+Care must be taken when testing conditions such as `OR 1=1`, because the same input could also be reused in other SQL queries such as `UPDATE` or `DELETE`, which could modify or remove data.
+
+### Subverting application logic
+SQL injection can also be used to change the logic of an application.
+For example, a login form may use a query like:
+
+```sql
+SELECT * FROM users WHERE username = 'wiener' AND password = 'bluecheese'
+```
+
+The login succeeds only if the query returns a matching user.
+If the username is vulnerable to SQL injection, an attacker may use:
+
+```text
+administrator'--
+```
+
+with an empty password.
+This can produce a query like:
+
+```sql
+SELECT * FROM users WHERE username = 'administrator'--' AND password = ''
+```
+
+Because `--` comments out the rest of the query, the password check is removed.
+The application may then authenticate the attacker as the `administrator` user without requiring the correct password.
+
+## Impact
+SQL injection can have a serious impact because it allows an attacker to interfere directly with database queries.
+Depending on the vulnerability, an attacker may be able to:
+
+- Access sensitive data that should normally be hidden.
+- Bypass authentication.
+- Read information belonging to other users.
+- Modify or delete data stored in the database.
+- Change the behavior of the application.
+- In severe cases, interact with other back-end systems or the underlying server.
+
+The exact impact depends on the database permissions and on how the application uses the vulnerable query.
+## Prevention
+The main protection against SQL injection is to avoid building SQL queries by directly concatenating user-controlled input.
+Applications should use parameterized queries, also called prepared statements.
+Instead of inserting user input directly into SQL syntax, the application sends the SQL structure and the user-controlled values separately.
+Input validation can also help by restricting values to the expected format, but it should not be the only protection.
+The database account used by the application should also have only the permissions it really needs.
+
+## Detection and testing
+SQL injection can be tested by identifying inputs that may be included in database queries.
+Interesting inputs can include:
+- URL parameters.
+- Form fields.
+- Login credentials.
+- Search fields.
+- Filters and category parameters.
+
+A tester can modify these values and observe whether SQL syntax changes the application's response or behavior.
+Examples of useful indicators include:
+
+- Unexpected database errors.
+- Different application responses after changing quotes or conditions.
+- Hidden data becoming visible.
+- Authentication being bypassed.
+- A condition such as `OR 1=1` changing the number of returned results.
+
+Testing should be done carefully because injected input may sometimes affect queries such as `UPDATE` or `DELETE`, which could modify data.
+
+## Classification
+- **CWE:** CWE-89 — Improper Neutralization of Special Elements used in an SQL Command
+- **OWASP Top 10 2025:** A05 — Injection
+- **Category:** Server-side vulnerability
+- **Main target:** Database queries
+- **Possible impact:** Data disclosure, authentication bypass, data modification or deletion
+
+## Labs completed
+### PortSwigger — SQL injection vulnerability in WHERE clause allowing retrieval of hidden data
+- **Difficulty:** Apprentice
+- **Vulnerability:** SQL Injection
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+When a category was selected, the application used a query similar to:
+
+```sql
+SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+```
+
+The condition `released = 1` was used to hide unreleased products.
+I intercepted the category request with Burp Suite and modified the `category` parameter with:
+
+```text
+' OR 1=1--
+```
+
+The condition `OR 1=1` is always true, and `--` comments out the rest of the SQL query.
+This removed the restriction on released products and caused the application to display hidden unreleased products, confirming the SQL injection vulnerability.
+
+### PortSwigger — SQL injection vulnerability allowing login bypass
+- **Difficulty:** Apprentice
+- **Vulnerability:** SQL Injection
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the login function.
+The objective was to bypass authentication and log in as the `administrator` user without knowing the password.
+I intercepted the login request with Burp Suite and modified the `username` parameter with:
+
+```text
+administrator'--
+```
+
+The `'` character closed the username value in the SQL query, and `--` commented out the rest of the query, including the password check.
+This allowed the application to authenticate me as the `administrator` user without providing the correct password.
+
+## References
+
+- [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
+- [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
+- [OWASP Cheat Sheet Series — SQL Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
+- [OWASP Web Security Testing Guide — Testing for SQL Injection](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection)
+- [MITRE — CWE-89: SQL Injection](https://cwe.mitre.org/data/definitions/89.html)
