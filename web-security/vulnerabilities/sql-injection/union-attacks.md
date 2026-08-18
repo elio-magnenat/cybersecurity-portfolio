@@ -49,3 +49,20 @@ A `UNION` query requires both queries to return the same number of columns.
 When the number of `NULL` values matches the number of columns in the original query, the payload may succeed.
 `NULL` is useful because it is compatible with most common SQL data types, which reduces the chance of a type mismatch.
 The result must still be inferred from the application's response, for example through a successful response, additional content, or a different error.
+
+## Database-specific syntax
+SQL injection syntax can vary depending on the database system.
+For example, Oracle requires every `SELECT` query to include a `FROM` clause. The built-in `DUAL` table can be used for this purpose:
+
+```sql
+' UNION SELECT NULL FROM DUAL--
+```
+
+Comment syntax can also differ between databases.
+For example:
+- `--` is commonly used to start a SQL comment.
+- On MySQL, `--` must be followed by a space.
+- MySQL also supports `#` as a comment character.
+
+Because of these differences, payloads may need to be adapted depending on the database in use.
+See the [PortSwigger SQL injection cheat sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet) for database-specific syntax.
