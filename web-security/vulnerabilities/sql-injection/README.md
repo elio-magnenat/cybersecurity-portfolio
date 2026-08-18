@@ -156,6 +156,25 @@ administrator'--
 The `'` character closed the username value in the SQL query, and `--` commented out the rest of the query, including the password check.
 This allowed the application to authenticate me as the `administrator` user without providing the correct password.
 
+### PortSwigger — SQL injection UNION attack, determining the number of columns returned by the query
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — UNION Attack
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+Because the query results were returned in the response, a `UNION` attack could be used. The objective was to determine how many columns were returned by the original query.
+I intercepted the category request with Burp Suite and tested `UNION SELECT` payloads with an increasing number of `NULL` values:
+
+```text
+' UNION SELECT NULL--
+' UNION SELECT NULL,NULL--
+' UNION SELECT NULL,NULL,NULL--
+```
+
+I continued adding `NULL` values until the error disappeared and the injected row was accepted.
+This allowed me to determine the number of columns returned by the original query, which is required before constructing more advanced `UNION` attacks.
+
 ## References
 
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
