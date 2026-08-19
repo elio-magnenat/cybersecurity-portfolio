@@ -82,3 +82,15 @@ For example, if the query returns four columns:
 
 If placing `'a'` in a column causes an error, that column is probably not compatible with string data.
 If the request succeeds and the injected value appears in the response, that column can be used to retrieve text data.
+
+## Retrieving data from other tables
+Once the number of columns and their compatible data types are known, a `UNION` attack can be used to retrieve data from another table.
+For example, if the original query returns two text-compatible columns and the database contains a `users` table with `username` and `password` columns:
+
+```text
+' UNION SELECT username, password FROM users--
+```
+
+The results from the `users` table can then be appended to the original query results and displayed by the application.
+To do this, the attacker needs to know the names of the relevant tables and columns.
+Modern databases expose metadata about their own structure, which can sometimes be queried through SQL injection to discover table and column names.
