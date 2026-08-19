@@ -200,6 +200,30 @@ I then replaced each `NULL` value one at a time with the random string provided 
 When the request succeeded and the injected string appeared in the response, I identified a column that could contain text data.
 This is an important step before using a `UNION` attack to retrieve textual information from other database tables.
 
+### PortSwigger — SQL injection UNION attack, retrieving data from other tables
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — UNION Attack
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+The objective was to retrieve usernames and passwords from a separate `users` table and use the recovered credentials to log in as the `administrator` user.
+I first confirmed that the original query returned two columns that could both contain text:
+
+```text
+' UNION SELECT 'abc','def'--
+```
+
+I then retrieved data from the `users` table using:
+
+```text
+' UNION SELECT username,password FROM users--
+```
+
+The application's response displayed the usernames and passwords returned by the injected query.
+I used the recovered administrator credentials to successfully log in as the `administrator` user.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
