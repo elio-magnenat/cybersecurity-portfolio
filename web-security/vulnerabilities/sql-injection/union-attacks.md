@@ -66,3 +66,19 @@ For example:
 
 Because of these differences, payloads may need to be adapted depending on the database in use.
 See the [PortSwigger SQL injection cheat sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet) for database-specific syntax.
+
+## Finding columns with a useful data type
+After determining the number of columns returned by the original query, it is necessary to find which columns can contain the type of data we want to retrieve.
+Interesting information such as usernames, passwords, or other text values is usually stored as strings.
+To test which columns can contain string data, a string value can be placed in each column one at a time.
+For example, if the query returns four columns:
+
+```text
+' UNION SELECT 'a',NULL,NULL,NULL--
+' UNION SELECT NULL,'a',NULL,NULL--
+' UNION SELECT NULL,NULL,'a',NULL--
+' UNION SELECT NULL,NULL,NULL,'a'--
+```
+
+If placing `'a'` in a column causes an error, that column is probably not compatible with string data.
+If the request succeeds and the injected value appears in the response, that column can be used to retrieve text data.
