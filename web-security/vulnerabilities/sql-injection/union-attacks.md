@@ -94,3 +94,24 @@ For example, if the original query returns two text-compatible columns and the d
 The results from the `users` table can then be appended to the original query results and displayed by the application.
 To do this, the attacker needs to know the names of the relevant tables and columns.
 Modern databases expose metadata about their own structure, which can sometimes be queried through SQL injection to discover table and column names.
+
+## Retrieving multiple values in a single column
+Sometimes a `UNION` attack only provides one column that can contain text.
+In this case, multiple values can be combined into the same column using string concatenation.
+For example, on Oracle:
+
+```text
+' UNION SELECT username || '~' || password FROM users--
+```
+
+The `||` operator concatenates strings, and the `~` character is used as a separator.
+The result can look like:
+
+```text
+administrator~s3cure
+wiener~peter
+carlos~montoya
+```
+
+This makes it possible to retrieve multiple fields, such as usernames and passwords, through a single text-compatible column.
+Concatenation syntax depends on the database system.
