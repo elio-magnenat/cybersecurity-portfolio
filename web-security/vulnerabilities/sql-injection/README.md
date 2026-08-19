@@ -175,8 +175,32 @@ I intercepted the category request with Burp Suite and tested `UNION SELECT` pay
 I continued adding `NULL` values until the error disappeared and the injected row was accepted.
 This allowed me to determine the number of columns returned by the original query, which is required before constructing more advanced `UNION` attacks.
 
-## References
+### PortSwigger — SQL injection UNION attack, finding a column containing text
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — UNION Attack
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
 
+The application contained a SQL injection vulnerability in the product category filter.
+After determining that the original query returned three columns, the objective was to identify which column was compatible with string data.
+I first confirmed the number of columns with:
+
+```text
+' UNION SELECT NULL,NULL,NULL--
+```
+
+I then replaced each `NULL` value one at a time with the random string provided by the lab:
+
+```text
+' UNION SELECT 'abcdef',NULL,NULL--
+' UNION SELECT NULL,'abcdef',NULL--
+' UNION SELECT NULL,NULL,'abcdef'--
+```
+
+When the request succeeded and the injected string appeared in the response, I identified a column that could contain text data.
+This is an important step before using a `UNION` attack to retrieve textual information from other database tables.
+
+## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
 - [OWASP Cheat Sheet Series — SQL Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
