@@ -307,6 +307,31 @@ Once the username and password columns were identified, I retrieved their conten
 The response exposed the administrator credentials, which I used to successfully log in.
 This lab demonstrated how SQL injection can be used to enumerate the database structure before retrieving sensitive data.
 
+### PortSwigger — Blind SQL injection with conditional responses
+- **Difficulty:** Practitioner
+- **Vulnerability:** Blind SQL Injection
+- **Result:** Solved
+- **Tools used:** Burp Suite Repeater / Intruder
+
+The application contained a blind SQL injection vulnerability in the `TrackingId` cookie.
+The SQL query results were not returned directly, but the application displayed a `Welcome back` message when the injected condition was true.
+I first confirmed the behavior using boolean conditions:
+
+```text
+TrackingId=xyz' AND '1'='1
+TrackingId=xyz' AND '1'='2
+```
+
+I then confirmed the existence of the `users` table and the `administrator` account.
+After determining the administrator password length, I extracted the password character by character using conditions based on `SUBSTRING()`:
+
+```text
+TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a
+```
+
+I used Burp Intruder to test possible characters and identified the correct value by looking for the `Welcome back` response.
+I repeated the process for each password position, reconstructed the full administrator password, and successfully logged in.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
