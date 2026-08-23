@@ -224,6 +224,30 @@ I then retrieved data from the `users` table using:
 The application's response displayed the usernames and passwords returned by the injected query.
 I used the recovered administrator credentials to successfully log in as the `administrator` user.
 
+### PortSwigger — SQL injection UNION attack, retrieving multiple values in a single column
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — UNION Attack
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+The objective was to retrieve usernames and passwords from the `users` table, but only one returned column was compatible with text data.
+
+I first confirmed the usable text column with:
+
+```text
+' UNION SELECT NULL,'abc'--
+```
+
+I then concatenated the `username` and `password` values into the same column:
+
+```text
+' UNION SELECT NULL,username||'~'||password FROM users--
+```
+
+The `||` operator concatenated both values and `~` was used as a separator.
+The response displayed the usernames and passwords, allowing me to recover the administrator credentials and log in successfully.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
