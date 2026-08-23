@@ -248,6 +248,29 @@ I then concatenated the `username` and `password` values into the same column:
 The `||` operator concatenated both values and `~` was used as a separator.
 The response displayed the usernames and passwords, allowing me to recover the administrator credentials and log in successfully.
 
+### PortSwigger — SQL injection attack, querying the database type and version on MySQL and Microsoft
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — Database Enumeration
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+The objective was to retrieve and display the database version using a `UNION` attack.
+I first confirmed that the original query returned two text-compatible columns:
+
+```text
+' UNION SELECT 'abc','def'#
+```
+
+I then used the MySQL/Microsoft version variable:
+
+```text
+' UNION SELECT @@version,NULL#
+```
+
+The database version was returned in the application's response, confirming the underlying database technology and version.
+This lab also showed that SQL comment syntax can depend on the database system. On MySQL, `#` can be used as a comment marker, while `--` must be followed by whitespace.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
