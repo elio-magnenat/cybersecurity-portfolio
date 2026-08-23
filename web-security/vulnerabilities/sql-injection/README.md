@@ -271,6 +271,42 @@ I then used the MySQL/Microsoft version variable:
 The database version was returned in the application's response, confirming the underlying database technology and version.
 This lab also showed that SQL comment syntax can depend on the database system. On MySQL, `#` can be used as a comment marker, while `--` must be followed by whitespace.
 
+### PortSwigger — SQL injection attack, listing the database contents on non-Oracle databases
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — Database Enumeration
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the product category filter.
+
+The objective was to discover the table containing user credentials, identify its columns, retrieve the usernames and passwords, and log in as the `administrator` user.
+I first confirmed that the original query returned two text-compatible columns:
+
+```text
+' UNION SELECT 'abc','def'--
+```
+
+I then listed the database tables using:
+
+```text
+' UNION SELECT table_name,NULL FROM information_schema.tables--
+```
+
+After identifying the table containing user credentials, I listed its columns with:
+
+```text
+' UNION SELECT column_name,NULL FROM information_schema.columns WHERE table_name='users_abcdef'--
+```
+
+Once the username and password columns were identified, I retrieved their contents:
+
+```text
+' UNION SELECT username_abcdef,password_abcdef FROM users_abcdef--
+```
+
+The response exposed the administrator credentials, which I used to successfully log in.
+This lab demonstrated how SQL injection can be used to enumerate the database structure before retrieving sensitive data.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
