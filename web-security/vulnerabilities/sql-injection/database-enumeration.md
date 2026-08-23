@@ -32,3 +32,38 @@ For example:
 If the injected query succeeds and the result is displayed in the response, the returned version string can reveal both the database type and the exact version in use.
 
 Knowing the database type is useful because SQL syntax, system tables, functions, and comment styles can differ between database systems.
+
+## Listing tables and columns
+
+Most database systems, except Oracle, expose metadata through the `information_schema`.
+This can be used to discover the structure of the database.
+To list available tables:
+
+```sql
+SELECT * FROM information_schema.tables
+```
+
+The result can reveal table names such as:
+
+```text
+Products
+Users
+Feedback
+```
+
+Once an interesting table is identified, its columns can be listed using:
+
+```sql
+SELECT * FROM information_schema.columns
+WHERE table_name = 'Users'
+```
+
+This can reveal information such as:
+
+```text
+UserId    int
+Username  varchar
+Password  varchar
+```
+
+This allows an attacker to enumerate the database structure before attempting to retrieve useful data.
