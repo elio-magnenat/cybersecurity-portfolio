@@ -332,6 +332,37 @@ TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='a
 I used Burp Intruder to test possible characters and identified the correct value by looking for the `Welcome back` response.
 I repeated the process for each password position, reconstructed the full administrator password, and successfully logged in.
 
+### PortSwigger — Blind SQL injection with conditional errors
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Blind SQL Injection — Conditional Errors
+- **Result:** Solved
+- **Tools used:** Burp Suite Repeater / Intruder
+
+The application contained a blind SQL injection vulnerability in the `TrackingId` cookie.
+
+The query results were not visible and normal true/false conditions did not change the page, but SQL errors caused a different HTTP response.
+
+I first confirmed the Oracle database behavior and built valid injected subqueries using the `dual` table.
+
+I then used conditional errors with a `CASE` expression:
+
+```text
+TrackingId=xyz'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+```
+
+A true condition triggered a database error and returned HTTP `500`, while a false condition returned a normal HTTP `200` response.
+
+I used this behavior to confirm the `administrator` user, determine the password length, and extract the password character by character with:
+
+```text
+TrackingId=xyz'||(SELECT CASE WHEN SUBSTR(password,1,1)='a' THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+```
+
+I used Burp Intruder to test possible characters and identified the correct value by looking for HTTP `500` responses.
+
+After reconstructing the full password, I successfully logged in as the `administrator` user.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
