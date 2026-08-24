@@ -62,3 +62,16 @@ Characters can also be compared using conditions such as:
 This allows the possible character range to be reduced progressively instead of testing every character one by one.
 The same process can then be repeated for the second, third, and following characters until the full value is recovered.
 The exact substring function depends on the database system. Some databases use `SUBSTRING`, while others use `SUBSTR`.
+
+## Error-based SQL injection
+
+Error-based SQL injection uses database errors as an observable signal to extract or infer information.
+
+There are two main approaches:
+
+- Triggering an error only when a specific condition is true. The presence or absence of the error can then be used as a boolean signal.
+- Causing the database error itself to include sensitive data returned by an injected query.
+
+The first approach is similar to conditional-response blind SQL injection, except that the signal is an error instead of a change in page content.
+
+The second approach can sometimes turn an otherwise blind SQL injection vulnerability into one where extracted data becomes directly visible in the application's error response.
