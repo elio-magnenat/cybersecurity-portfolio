@@ -75,3 +75,42 @@ There are two main approaches:
 The first approach is similar to conditional-response blind SQL injection, except that the signal is an error instead of a change in page content.
 
 The second approach can sometimes turn an otherwise blind SQL injection vulnerability into one where extracted data becomes directly visible in the application's error response.
+
+### Conditional errors
+
+When normal application responses do not change depending on whether a SQL condition is true or false, database errors can be used as an alternative signal.
+
+A `CASE` expression can execute different expressions depending on a condition.
+
+For example:
+
+```text
+xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
+```
+
+Because `1=2` is false, the expression returns `'a'` and no error occurs.
+
+But:
+
+```text
+xyz' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE 'a' END)='a
+```
+
+causes a divide-by-zero error because the condition is true.
+
+This creates a boolean signal:
+
+```text
+True condition  -> database error
+False condition -> normal response
+```
+
+The same technique can be used to infer sensitive data one character at a time:
+
+```text
+xyz' AND (SELECT CASE WHEN (Username='Administrator' AND SUBSTRING(Password,1,1)>'m') THEN 1/0 ELSE 'a' END FROM Users)='a
+```
+
+If the request causes an error, the tested condition is true. Otherwise, it is false.
+
+The exact technique used to trigger an error depends on the database system.
