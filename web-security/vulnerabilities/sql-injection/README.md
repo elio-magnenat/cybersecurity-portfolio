@@ -363,6 +363,45 @@ I used Burp Intruder to test possible characters and identified the correct valu
 
 After reconstructing the full password, I successfully logged in as the `administrator` user.
 
+### PortSwigger — Visible error-based SQL injection
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Error-Based SQL Injection
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the `TrackingId` cookie.
+
+The SQL query results were not returned directly, but verbose database errors exposed useful information about the query structure and later leaked data from the database.
+
+I first confirmed that the cookie value was inserted inside a single-quoted SQL string by appending a quote and observing the resulting syntax error.
+
+I then built a valid boolean condition using `CAST()`:
+
+```text
+TrackingId=' AND 1=CAST((SELECT 1) AS int)--
+```
+
+After confirming the syntax, I queried the `users` table. Because the original payload was too long, I removed the original cookie value to stay within the character limit.
+
+I first retrieved one username using:
+
+```text
+TrackingId=' AND 1=CAST((SELECT username FROM users LIMIT 1) AS int)--
+```
+
+The database attempted to convert the returned username to an integer and leaked it inside the error message, revealing that the first user was `administrator`.
+
+I then retrieved the corresponding password with:
+
+```text
+TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--
+```
+
+The verbose conversion error exposed the administrator password directly.
+
+I used the recovered credentials to successfully log in as the `administrator` user.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
