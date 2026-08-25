@@ -144,3 +144,45 @@ invalid input syntax for type integer: "Example data"
 This can make otherwise blind SQL injection effectively visible, because the queried value is leaked directly through the database error message.
 
 The exact behavior depends on the database system and how errors are handled by the application.
+
+### Time-based blind SQL injection
+
+When an application hides database errors and does not change its response based on query results, response time can be used as an indirect signal.
+
+The attacker can trigger a database delay only when a specific condition is true.
+
+For example, on Microsoft SQL Server:
+
+```text
+'; IF (1=2) WAITFOR DELAY '0:0:10'--
+```
+
+does not cause a delay because the condition is false.
+
+But:
+
+```text
+'; IF (1=1) WAITFOR DELAY '0:0:10'--
+```
+
+causes the database to wait before returning the result.
+
+This creates another boolean channel:
+
+```text
+True condition  -> delayed response
+False condition -> normal response time
+```
+
+The same technique can be used to infer sensitive data character by character:
+
+```text
+'; IF (SELECT COUNT(Username) FROM Users
+WHERE Username='Administrator'
+AND SUBSTRING(Password,1,1)>'m')=1
+WAITFOR DELAY '0:0:10'--
+```
+
+If the response is delayed, the tested condition is true.
+
+The exact syntax used to trigger time delays depends on the database system.
