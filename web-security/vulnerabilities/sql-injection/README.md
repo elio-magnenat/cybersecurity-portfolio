@@ -402,6 +402,43 @@ The verbose conversion error exposed the administrator password directly.
 
 I used the recovered credentials to successfully log in as the `administrator` user.
 
+### PortSwigger — Blind SQL injection with time delays and information retrieval
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Blind SQL Injection — Time-Based
+- **Result:** Solved
+- **Tools used:** Burp Suite Repeater / Python script
+
+The application contained a blind SQL injection vulnerability in the `TrackingId` cookie.
+
+The query results were not visible, normal true/false conditions did not change the page, and database errors were handled silently. However, conditional time delays could still be used as a side channel.
+
+I first confirmed the technique manually with Burp Suite by triggering a PostgreSQL delay only when a condition was true:
+
+```text
+TrackingId=x'%3BSELECT+CASE+WHEN+(1=1)+THEN+pg_sleep(2)+ELSE+pg_sleep(0)+END--
+```
+
+A true condition caused a delayed response, while a false condition returned immediately.
+
+I had already used the same general blind SQL injection approach in previous labs: determine the password length, then recover the password one character at a time by observing a true/false signal.
+
+The official approach uses Burp Intruder to test every possible character for each password position. Since I had already understood and practiced this mechanism, repeating hundreds of sequential time-based requests would have been unnecessarily slow.
+
+I therefore used AI assistance to help me create a Python script that automated the same technique more efficiently.
+
+Instead of testing every possible character individually, the script used binary search with comparisons based on the ASCII value of each character:
+
+```sql
+ASCII(SUBSTRING(password, position, 1)) > midpoint
+```
+
+If the condition was true, the database introduced a delay. The script then discarded half of the remaining possible values and repeated the process until the character was identified.
+
+This reduced the number of tests from up to 36 requests per character to approximately 6 requests per character.
+
+The script reconstructed the administrator password position by position, and I used the recovered credentials to successfully log in as the `administrator` user.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
