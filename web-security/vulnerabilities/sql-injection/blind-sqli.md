@@ -114,3 +114,33 @@ xyz' AND (SELECT CASE WHEN (Username='Administrator' AND SUBSTRING(Password,1,1)
 If the request causes an error, the tested condition is true. Otherwise, it is false.
 
 The exact technique used to trigger an error depends on the database system.
+
+### Verbose SQL error messages
+
+Some applications expose detailed database error messages.
+
+These errors can reveal useful information such as:
+
+- The structure of the SQL query.
+- The context in which user input is inserted.
+- Database-specific syntax details.
+
+For example, an unterminated string error may reveal that the input is inserted inside a quoted value in a `WHERE` clause.
+
+In some cases, an attacker can deliberately trigger a type conversion error that includes sensitive data in the error message.
+
+For example:
+
+```sql
+CAST((SELECT example_column FROM example_table) AS int)
+```
+
+If the selected value contains text that cannot be converted to an integer, the database may return an error such as:
+
+```text
+invalid input syntax for type integer: "Example data"
+```
+
+This can make otherwise blind SQL injection effectively visible, because the queried value is leaked directly through the database error message.
+
+The exact behavior depends on the database system and how errors are handled by the application.
