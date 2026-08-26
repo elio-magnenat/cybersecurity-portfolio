@@ -114,12 +114,55 @@ Depending on the vulnerability, an attacker may be able to:
 - In severe cases, interact with other back-end systems or the underlying server.
 
 The exact impact depends on the database permissions and on how the application uses the vulnerable query.
+
 ## Prevention
-The main protection against SQL injection is to avoid building SQL queries by directly concatenating user-controlled input.
-Applications should use parameterized queries, also called prepared statements.
-Instead of inserting user input directly into SQL syntax, the application sends the SQL structure and the user-controlled values separately.
-Input validation can also help by restricting values to the expected format, but it should not be the only protection.
-The database account used by the application should also have only the permissions it really needs.
+
+The main defense against SQL injection is to avoid constructing SQL queries by concatenating untrusted input.
+
+Applications should use parameterized queries, also known as prepared statements.
+
+A vulnerable query may be built like this:
+
+```java
+String query =
+    "SELECT * FROM products WHERE category = '" + input + "'";
+```
+
+Because the user-controlled value is inserted directly into the SQL string, it can change the structure of the query.
+
+A safer approach is:
+
+```java
+PreparedStatement statement =
+    connection.prepareStatement(
+        "SELECT * FROM products WHERE category = ?"
+    );
+
+statement.setString(1, input);
+ResultSet resultSet = statement.executeQuery();
+```
+
+The SQL structure remains fixed, while the user-controlled input is supplied separately as data.
+
+Parameterized queries should be used whenever untrusted input represents a value, including:
+
+- `WHERE` conditions.
+- Values used in `INSERT` statements.
+- Values used in `UPDATE` statements.
+
+They cannot normally be used for structural elements such as:
+
+- Table names.
+- Column names.
+- `ORDER BY` expressions.
+
+When user input affects these parts of a query, the application should use a different design, such as strict whitelisting of permitted values.
+
+The SQL query template itself should remain a hard-coded constant and should never contain dynamically concatenated data.
+
+Developers should not assume that some values are safe simply because they came from an internal source or were previously stored in the database.
+
+Input validation and least-privileged database accounts are useful additional defenses, but they should not replace parameterized queries.
 
 ## Detection and testing
 SQL injection can be tested by identifying inputs that may be included in database queries.
