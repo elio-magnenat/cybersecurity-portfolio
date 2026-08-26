@@ -69,6 +69,39 @@ SELECT * FROM users WHERE username = 'administrator'--' AND password = ''
 Because `--` comments out the rest of the query, the password check is removed.
 The application may then authenticate the attacker as the `administrator` user without requiring the correct password.
 
+### Second-order SQL injection
+
+Second-order SQL injection, also called stored SQL injection, occurs when malicious input is stored safely at first but is later reused inside a SQL query in an unsafe way.
+
+In a first-order SQL injection, the application immediately inserts user-controlled input from the current HTTP request into a vulnerable SQL query.
+
+In a second-order SQL injection, the process happens in two stages:
+
+1. The application receives user-controlled input and stores it, usually in a database.
+2. Later, the application retrieves that stored value and uses it to build another SQL query unsafely.
+
+The initial storage operation may be secure and use parameterized queries, so no vulnerability is triggered at that moment.
+
+The problem appears later when developers assume that data already stored in the database is trusted and concatenate it directly into a new SQL query.
+
+For example:
+
+```text
+User input
+    ↓
+Safely stored in database
+    ↓
+Retrieved later
+    ↓
+Inserted unsafely into another SQL query
+    ↓
+SQL injection
+```
+
+The important lesson is that data should not be considered safe simply because it came from the application's own database.
+
+Stored values that originally came from users must still be handled safely whenever they are used in SQL queries.
+
 ## Impact
 SQL injection can have a serious impact because it allows an attacker to interfere directly with database queries.
 Depending on the vulnerability, an attacker may be able to:
