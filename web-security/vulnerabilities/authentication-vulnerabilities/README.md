@@ -4,6 +4,16 @@ Authentication vulnerabilities happen when this process is weak, incorrectly imp
 These vulnerabilities can affect different authentication mechanisms, such as passwords, password reset flows, multi-factor authentication, and session-related processes.
 This section covers common authentication weaknesses, their impact, how to detect them, and how they can be prevented.
 
+### Authentication factors
+
+Authentication mechanisms generally rely on one or more types of factors:
+
+- **Something you know:** for example, a password, PIN, or answer to a security question.
+- **Something you have:** for example, a mobile phone, hardware token, or security key.
+- **Something you are:** for example, fingerprints, facial recognition, or other biometric characteristics.
+
+Using multiple independent factors can provide stronger protection than relying on a password alone.
+
 ## Authentication vs authorization
 Authentication verifies that a user is who they claim to be.
 Authorization checks what an authenticated user is allowed to access or do.
