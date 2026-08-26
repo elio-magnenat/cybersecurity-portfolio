@@ -439,6 +439,37 @@ This reduced the number of tests from up to 36 requests per character to approxi
 
 The script reconstructed the administrator password position by position, and I used the recovered credentials to successfully log in as the `administrator` user.
 
+### PortSwigger — SQL injection with filter bypass via XML encoding
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** SQL Injection — WAF Bypass via XML Encoding
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a SQL injection vulnerability in the stock check feature.
+
+The `productId` and `storeId` values were sent to the server inside an XML request. I first confirmed that the `storeId` value was evaluated by the back-end and then attempted a `UNION SELECT` attack.
+
+A direct SQL injection payload was blocked by the application's web application firewall (WAF), so I encoded the payload using XML hexadecimal character entities.
+
+For example:
+
+```xml
+<storeId>2 &#x55;&#x4E;&#x49;&#x4F;&#x4E; &#x53;&#x45;&#x4C;&#x45;&#x43;&#x54; ...</storeId>
+```
+
+The WAF inspected the encoded XML representation, but the XML parser decoded the entities before the value reached the SQL interpreter.
+
+This allowed the SQL payload to execute while bypassing the filter.
+
+After confirming that the original query returned only one column, I used a `UNION SELECT` payload to retrieve data from the `users` table.
+
+Because only one column was available, usernames and passwords had to be returned through a single output value.
+
+The attack successfully exposed the administrator credentials, which I used to log in and solve the lab.
+
+This lab demonstrated that SQL injection can appear in structured input formats such as XML, and that decoding performed after security filtering can sometimes allow encoded payloads to bypass weak WAF rules.
+
 ## References
 - [PortSwigger Web Security Academy — SQL injection](https://portswigger.net/web-security/sql-injection)
 - [OWASP — SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
