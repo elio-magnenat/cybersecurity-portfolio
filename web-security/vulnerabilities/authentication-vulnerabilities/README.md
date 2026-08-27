@@ -21,6 +21,15 @@ Authorization checks what an authenticated user is allowed to access or do.
 For example, authentication verifies that the person logging in as `Carlos123` is really the owner of that account. Once the user is authenticated, authorization determines whether they can access another user's data or perform sensitive actions such as deleting an account.
 
 ## Common vulnerable patterns
+
+### Password-based authentication
+
+In a password-based authentication system, a user proves their identity by providing a username and a secret password associated with the account.
+
+The security of this mechanism depends on keeping the password secret. If an attacker can obtain or correctly guess another user's credentials, they may be able to authenticate as that user.
+
+Common attack paths include credential guessing, brute-force attacks, leaked or reused passwords, and weaknesses in the protections designed to limit repeated login attempts.
+
 ### Brute-force attacks
 A brute-force attack happens when an attacker repeatedly tries different usernames, passwords, or both until valid credentials are found.
 These attacks are usually automated with wordlists and dedicated tools, which makes it possible to test many login attempts quickly.
