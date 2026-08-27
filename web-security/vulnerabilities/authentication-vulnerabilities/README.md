@@ -93,6 +93,8 @@ Possible differences may include:
 - Different redirects
 - Different account lockout behavior
 
+Timing differences can sometimes be amplified by submitting an unusually long password. If the application performs expensive password processing only when the username is valid, this can make the response-time difference easier to detect.
+
 ### Two-factor authentication bypass
 Two-factor authentication can sometimes be bypassed when the application does not correctly verify that the second authentication step has been completed.
 For example, a user may first enter a valid username and password, then be redirected to a page asking for a verification code.
