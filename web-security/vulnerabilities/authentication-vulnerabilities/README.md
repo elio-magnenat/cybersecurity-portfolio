@@ -105,6 +105,7 @@ Possible impacts include:
 
 The impact depends on the privileges of the compromised account and the type of application.
 If an administrator account is compromised, the attacker may gain access to sensitive functions and data across the entire application.
+Even a low-privileged account can increase the attack surface by exposing internal pages and functionality that are not accessible to unauthenticated users. These authenticated areas may contain additional vulnerabilities or provide stepping stones toward more severe attacks.
 Authentication vulnerabilities mainly affect confidentiality and integrity, but they can also affect availability if the compromised account can delete data, disable users, or change critical settings.
 
 ## Prevention
