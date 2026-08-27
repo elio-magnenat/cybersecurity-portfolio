@@ -1,6 +1,7 @@
 # Authentication Vulnerabilities
 Authentication is the process used by an application to verify a user's identity.
 Authentication vulnerabilities happen when this process is weak, incorrectly implemented, or can be bypassed. They may allow an attacker to access another user's account, sensitive data, or protected functionality.
+Authentication vulnerabilities generally arise either because the mechanism is too weak against attacks such as brute force, or because implementation and logic flaws allow the authentication process to be bypassed entirely. This is often referred to as broken authentication.
 These vulnerabilities can affect different authentication mechanisms, such as passwords, password reset flows, multi-factor authentication, and session-related processes.
 This section covers common authentication weaknesses, their impact, how to detect them, and how they can be prevented.
 
