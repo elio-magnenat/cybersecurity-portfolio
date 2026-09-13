@@ -91,6 +91,22 @@ For example, some applications reset the failed-attempt counter for an IP addres
 
 This demonstrates that brute-force defenses must not only exist, but must also be designed so that attackers cannot reset or manipulate their state during an attack.
 
+#### Account locking
+
+Account locking is commonly used to slow down brute-force attacks by temporarily locking an account after a certain number of failed login attempts.
+
+However, the lockout behavior itself can introduce weaknesses.
+
+If the application responds differently when an account becomes locked, this can reveal that the username is valid and therefore support username enumeration.
+
+Account locking also mainly protects against repeated attempts against one specific account. It is less effective when an attacker distributes a small number of password guesses across many usernames.
+
+For example, if an account is locked after three failed attempts, an attacker can try three highly probable passwords against a large list of usernames without exceeding the lockout threshold for any single account.
+
+Account locking also does not effectively prevent credential stuffing attacks. In credential stuffing, the attacker tests previously leaked `username:password` pairs against the application. Because each username may only be attempted once, account lockout thresholds may never be reached.
+
+This means that account lockout should be combined with other protections such as rate limiting, anomaly detection, multi-factor authentication, and monitoring of suspicious login patterns.
+
 ### Username enumeration
 Username enumeration happens when an application responds differently depending on whether a username exists.
 This often appears on login pages. For example, the application may return one message for an unknown username and another message for a valid username with an incorrect password.
