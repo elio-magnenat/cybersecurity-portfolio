@@ -193,6 +193,39 @@ I then kept the valid username and used a password wordlist to test possible pas
 This lab demonstrates how small differences in error messages, response length, or HTTP status codes can reveal valid usernames and make password brute-force attacks much more efficient.
 It also shows why authentication responses should be as consistent as possible and why login endpoints need protection against repeated automated attempts.
 
+### PortSwigger — Username enumeration via subtly different responses
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Username Enumeration / Brute Force
+- **Result:** Solved
+- **Tool used:** Burp Suite Intruder
+
+The login page returned almost identical error messages for valid and invalid usernames.
+
+I used Burp Intruder with the provided username wordlist and compared the returned error messages.
+
+Most invalid usernames returned:
+
+```text
+Invalid username or password.
+```
+
+One response was subtly different:
+
+```text
+Invalid username or password
+```
+
+The only difference was the missing final period, which revealed that this username was valid.
+
+After identifying the valid username, I replaced the username payload with that account and brute-forced the password using the provided password wordlist.
+
+One request returned HTTP `302` instead of the normal `200` responses, indicating a successful login.
+
+I then used the recovered credentials to access the account page and solve the lab.
+
+This lab demonstrated that username enumeration can rely on extremely small response differences, including punctuation, whitespace, or other subtle variations that may be difficult to notice manually.
+
 ### PortSwigger — 2FA simple bypass
 - **Difficulty:** Apprentice
 - **Vulnerability:** Two-factor authentication bypass
