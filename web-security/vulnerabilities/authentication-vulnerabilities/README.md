@@ -198,6 +198,38 @@ If the application already considers the user authenticated after the password s
 This happens when the server protects the verification page, but does not verify the 2FA state again before allowing access to protected resources.
 The application should only create a fully authenticated session after all required authentication steps have been successfully completed.
 
+#### Flawed two-factor verification logic
+
+Two-factor authentication can be vulnerable when the application does not correctly bind the second authentication step to the same user who completed the first step.
+
+For example, after validating a username and password, the application may store the account identifier in a client-controlled cookie:
+
+```http
+Set-Cookie: account=carlos
+```
+
+The second authentication step may then rely on this cookie to determine which account the submitted verification code belongs to:
+
+```http
+Cookie: account=carlos
+verification-code=123456
+```
+
+If the server trusts this client-controlled value without verifying that it matches the user authenticated during the first step, an attacker may be able to change the account identifier to another username.
+
+For example:
+
+```http
+Cookie: account=victim-user
+verification-code=123456
+```
+
+This can allow an attacker to complete the second authentication step for another account after logging in with their own credentials.
+
+The impact becomes especially severe if the verification code can be brute-forced, because the attacker may be able to access another user's account without ever knowing that user's password.
+
+This demonstrates that every authentication step must be securely bound to the same server-side authentication state. User identity must not be determined from client-controlled values such as cookies or request parameters.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
