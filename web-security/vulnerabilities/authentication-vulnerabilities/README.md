@@ -230,6 +230,33 @@ The impact becomes especially severe if the verification code can be brute-force
 
 This demonstrates that every authentication step must be securely bound to the same server-side authentication state. User identity must not be determined from client-controlled values such as cookies or request parameters.
 
+#### Brute-forcing 2FA verification codes
+
+Two-factor authentication codes are often short numeric values, commonly four or six digits long.
+
+Because the number of possible combinations is relatively small, verification codes can be brute-forced quickly if the application does not properly restrict repeated attempts.
+
+For example:
+
+```text
+4-digit code: 10,000 possibilities
+6-digit code: 1,000,000 possibilities
+```
+
+Some applications try to prevent brute-force attacks by logging the user out after several incorrect verification codes.
+
+However, this protection can still be ineffective if an attacker is able to automate the entire authentication flow. The attacker may repeatedly:
+
+1. Authenticate with valid username and password credentials
+2. Reach the 2FA verification step
+3. Submit several candidate codes
+4. Get logged out
+5. Start the authentication process again
+
+Tools such as Burp Suite macros or Turbo Intruder can automate these multi-step authentication workflows.
+
+This demonstrates that 2FA verification endpoints require their own robust brute-force protections, such as rate limiting, attempt counters, temporary lockouts, and server-side monitoring.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
