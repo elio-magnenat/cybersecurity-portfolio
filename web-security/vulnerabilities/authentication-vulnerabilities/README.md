@@ -226,6 +226,33 @@ I then used the recovered credentials to access the account page and solve the l
 
 This lab demonstrated that username enumeration can rely on extremely small response differences, including punctuation, whitespace, or other subtle variations that may be difficult to notice manually.
 
+### PortSwigger — Username enumeration via response timing
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Username Enumeration / Timing Attack
+- **Result:** Solved
+- **Tool used:** Burp Suite Intruder
+
+The login mechanism was vulnerable to username enumeration through differences in response time.
+
+The application also implemented IP-based brute-force protection. I identified that the `X-Forwarded-For` header was trusted, allowing me to spoof a different client IP for each request and bypass the protection.
+
+I used a Pitchfork attack in Burp Intruder with two payload positions:
+- An incrementing value in the `X-Forwarded-For` header
+- A list of candidate usernames
+
+I submitted an unusually long password to amplify timing differences. Invalid usernames produced similar response times, while one username consistently caused a noticeably slower response, indicating that the application was performing additional password processing for that account.
+
+After confirming the valid username, I launched a second Pitchfork attack using:
+- Incrementing spoofed IP addresses
+- The candidate password wordlist
+
+One request returned HTTP `302`, indicating a successful login.
+
+I then used the identified credentials to access the account page and solve the lab.
+
+This lab demonstrated how timing side channels can reveal valid usernames even when error messages and status codes remain consistent. It also showed how trusting client-controlled headers such as `X-Forwarded-For` can weaken IP-based brute-force protections.
+
 ### PortSwigger — 2FA simple bypass
 - **Difficulty:** Apprentice
 - **Vulnerability:** Two-factor authentication bypass
