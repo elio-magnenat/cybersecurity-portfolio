@@ -311,6 +311,29 @@ I used the corresponding password to log in to Carlos's account and solve the la
 
 This lab demonstrated that brute-force protections can be bypassed when their internal state can be reset by unrelated successful authentication events.
 
+### PortSwigger — Username enumeration via account lock
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Username Enumeration / Account Lockout Logic Flaw
+- **Result:** Solved
+- **Tools used:** Burp Suite Intruder / Python
+
+The login mechanism locked valid accounts after repeated failed authentication attempts.
+
+I first tested each candidate username multiple times with an invalid password. Most usernames always returned the same response, while one username eventually triggered the message:
+
+```text
+You have made too many incorrect login attempts.
+```
+
+This revealed that the username was valid because only an existing account had a failed-login counter and could enter the locked state.
+
+After identifying the valid username, I brute-forced the candidate password list. Normal incorrect passwords returned an error message, while the correct password produced a different response and ultimately an HTTP `302` redirect to the account page.
+
+Because the lockout was temporary, I waited for it to reset before confirming the recovered credentials and accessing the account.
+
+This lab demonstrated that account lockout mechanisms can unintentionally become a username-enumeration oracle. It also showed that lockout controls can still be bypassed or worked around when their behavior leaks useful authentication state.
+
 ### PortSwigger — 2FA simple bypass
 - **Difficulty:** Apprentice
 - **Vulnerability:** Two-factor authentication bypass
