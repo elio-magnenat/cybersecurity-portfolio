@@ -35,6 +35,7 @@ A brute-force attack happens when an attacker repeatedly tries different usernam
 These attacks are usually automated with wordlists and dedicated tools, which makes it possible to test many login attempts quickly.
 Brute force does not always use random values. Attackers may use common passwords, leaked credentials, personal information, or predictable username formats to make their guesses more effective.
 Applications that only use password-based authentication and do not have enough protection against repeated login attempts are especially vulnerable.
+
 #### Brute-forcing usernames
 Usernames can be easy to guess when they follow a predictable format.
 For example, company accounts often use patterns such as:
@@ -79,6 +80,16 @@ Myp4$$w0rd
 ```
 When users are required to change their password regularly, they may also make only small changes, such as replacing one character or increasing a number.
 These predictable habits make brute-force attacks more effective because attackers can test likely variations instead of trying every possible combination.
+
+#### Flawed brute-force protection
+
+Brute-force protections commonly rely on account lockouts or IP-based rate limiting after repeated failed login attempts.
+
+These controls can be ineffective when their logic can be reset or bypassed.
+
+For example, some applications reset the failed-attempt counter for an IP address after a successful login. If an attacker has access to their own valid account, they may be able to insert a legitimate login after every few failed attempts and prevent the protection threshold from ever being reached.
+
+This demonstrates that brute-force defenses must not only exist, but must also be designed so that attackers cannot reset or manipulate their state during an attack.
 
 ### Username enumeration
 Username enumeration happens when an application responds differently depending on whether a username exists.
@@ -169,6 +180,7 @@ I pay particular attention to:
 - Session behavior before and after authentication
 
 A successful test occurs when the application reveals useful authentication information, allows too many automated attempts, or grants access without completing all required authentication steps.
+
 ## Classification
 - **Common name:** Authentication Vulnerabilities
 - **OWASP Top 10:2025:** A07 — Authentication Failures
