@@ -107,6 +107,20 @@ Account locking also does not effectively prevent credential stuffing attacks. I
 
 This means that account lockout should be combined with other protections such as rate limiting, anomaly detection, multi-factor authentication, and monitoring of suspicious login patterns.
 
+#### User rate limiting
+
+User rate limiting is another defense against brute-force attacks. Instead of locking a specific account, the application limits or blocks login requests coming from the same client IP after too many attempts within a short period of time.
+
+The block may be removed automatically after a delay, manually by an administrator, or after the user completes an additional challenge such as a CAPTCHA.
+
+Compared with account locking, IP-based rate limiting is generally less likely to reveal whether a username exists and is less vulnerable to account-targeted denial-of-service attacks.
+
+However, its effectiveness depends on how reliably the application identifies the client. If the application trusts attacker-controlled headers such as `X-Forwarded-For`, an attacker may be able to change their apparent IP address and bypass the rate limit.
+
+Rate limiting can also be weakened if a single HTTP request allows multiple password guesses, because the application may count requests rather than individual authentication attempts.
+
+Rate limiting should therefore be combined with other protections such as multi-factor authentication, anomaly detection, secure proxy configuration, and monitoring of suspicious authentication activity.
+
 ### Username enumeration
 Username enumeration happens when an application responds differently depending on whether a username exists.
 This often appears on login pages. For example, the application may return one message for an unknown username and another message for a valid username with an incorrect password.
