@@ -435,6 +435,25 @@ Because the lockout was temporary, I waited for it to reset before confirming th
 
 This lab demonstrated that account lockout mechanisms can unintentionally become a username-enumeration oracle. It also showed that lockout controls can still be bypassed or worked around when their behavior leaks useful authentication state.
 
+### PortSwigger — 2FA broken logic
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Broken Two-Factor Authentication Logic
+- **Result:** Solved
+- **Tools used:** Burp Suite Repeater / Python
+
+The application used a client-controlled `verify` value to determine which account the second authentication step belonged to.
+
+I first authenticated with my own account and inspected the 2FA flow. I identified that the `verify` parameter was used to select the account associated with the verification code.
+
+I then changed this value to the victim's username and triggered the generation of a temporary 2FA code for that account.
+
+After returning to the login flow with my own valid credentials, I submitted requests to `/login2` while keeping the victim's username in the `verify` value and brute-forcing the `mfa-code` parameter.
+
+A successful code produced an HTTP `302` response, which allowed access to the victim's account.
+
+This lab demonstrated that multi-step authentication must securely bind every step to the same server-side user identity. Relying on client-controlled values such as cookies or request parameters can allow attackers to complete the second authentication step for another account without knowing that user's password.
+
 ### PortSwigger — 2FA simple bypass
 - **Difficulty:** Apprentice
 - **Vulnerability:** Two-factor authentication bypass
