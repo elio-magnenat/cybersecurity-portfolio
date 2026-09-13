@@ -265,6 +265,36 @@ I then used the identified credentials to access the account page and solve the 
 
 This lab demonstrated how timing side channels can reveal valid usernames even when error messages and status codes remain consistent. It also showed how trusting client-controlled headers such as `X-Forwarded-For` can weaken IP-based brute-force protections.
 
+### PortSwigger — Broken brute-force protection, IP block
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Broken Brute-force Protection / Logic Flaw
+- **Result:** Solved
+- **Tool used:** Burp Suite Intruder
+
+The login mechanism temporarily blocked the client IP after several consecutive failed login attempts.
+
+However, the failed-attempt counter was reset whenever a successful login occurred. This made it possible to bypass the protection by alternating legitimate logins to my own account with brute-force attempts against the victim account.
+
+I generated an alternating payload list where each request to `carlos` was preceded by a valid login using my own credentials.
+
+The requests followed this pattern:
+
+```text
+username=wiener&password=peter
+username=carlos&password=<candidate-password>
+username=wiener&password=peter
+username=carlos&password=<next-candidate-password>
+```
+
+I then sent the sequence through Burp Intruder with requests processed in order.
+
+After the attack completed, I filtered the results to keep only successful responses and sorted the payload column. This made it easy to identify the single successful request that targeted `carlos` rather than my own account.
+
+I used the corresponding password to log in to Carlos's account and solve the lab.
+
+This lab demonstrated that brute-force protections can be bypassed when their internal state can be reset by unrelated successful authentication events.
+
 ### PortSwigger — 2FA simple bypass
 - **Difficulty:** Apprentice
 - **Vulnerability:** Two-factor authentication bypass
