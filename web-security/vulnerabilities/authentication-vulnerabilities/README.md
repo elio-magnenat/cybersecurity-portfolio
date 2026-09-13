@@ -121,6 +121,32 @@ Rate limiting can also be weakened if a single HTTP request allows multiple pass
 
 Rate limiting should therefore be combined with other protections such as multi-factor authentication, anomaly detection, secure proxy configuration, and monitoring of suspicious authentication activity.
 
+#### HTTP Basic Authentication
+
+HTTP Basic Authentication is a simple authentication mechanism where the client sends a username and password in the `Authorization` header.
+
+The credentials are concatenated using the format:
+
+```text
+username:password
+```
+
+and then Base64-encoded:
+
+```http
+Authorization: Basic base64(username:password)
+```
+
+The browser typically stores these credentials and automatically includes the header in subsequent requests.
+
+Base64 encoding does not provide encryption. The credentials can be decoded easily, so the security of HTTP Basic Authentication depends heavily on secure transport.
+
+Because the same static credentials are repeatedly sent with requests, weak implementations may expose them to interception, brute-force attacks, or credential reuse.
+
+HTTP Basic Authentication may also lack built-in protections against attacks such as brute force and CSRF, depending on how the application is implemented.
+
+Even if the protected area appears low-value, recovered credentials may still be reused in other applications or more sensitive parts of the same environment.
+
 ### Username enumeration
 Username enumeration happens when an application responds differently depending on whether a username exists.
 This often appears on login pages. For example, the application may return one message for an unknown username and another message for a valid username with an incorrect password.
