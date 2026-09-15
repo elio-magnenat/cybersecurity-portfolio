@@ -273,6 +273,38 @@ An attacker who can create their own account may be able to study these workflow
 
 All authentication-related functionality should therefore be protected with the same level of care as the main login process.
 
+#### Keeping users logged in
+
+Many applications offer a "Remember me" or "Keep me logged in" feature that allows users to remain authenticated after closing their browser.
+
+This is commonly implemented using a persistent cookie containing a long-lived authentication token.
+
+Because possession of this cookie may allow the user to bypass the normal login process, the token must be unpredictable and resistant to brute-force attacks.
+
+Weak implementations sometimes generate remember-me cookies from predictable values such as:
+
+- The username
+- A timestamp
+- The user's password
+- A predictable combination of static values
+
+If an attacker can create their own account, they may be able to study their own cookie and determine how the token is generated.
+
+Once the generation algorithm is understood, the attacker may be able to create or brute-force valid cookies for other users.
+
+Encoding the cookie does not automatically make it secure. For example, Base64 provides no protection because it is only a reversible encoding.
+
+Even hashed values may still be vulnerable if:
+
+- The hashing algorithm is known
+- No salt is used
+- The underlying values are predictable
+- Weak passwords are used as part of the token
+
+An attacker may also obtain a remember-me cookie through another vulnerability such as XSS and use it to understand how the token is constructed.
+
+Persistent authentication tokens should therefore be generated using cryptographically secure random values and should be protected by rate limiting, expiration, revocation, and secure cookie attributes.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
@@ -504,7 +536,7 @@ This lab demonstrated that multi-step authentication must securely bind every st
 
 The application asked for a 2FA verification code after the password step, but it did not correctly enforce this second authentication step before allowing access to the account page.
 After logging in with valid credentials, it was possible to directly access the protected account page without entering the verification code.
-This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been successfully completed.
+This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been completed.
 
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
