@@ -580,6 +580,33 @@ A successful request returned the authenticated account page, confirming the cor
 
 This lab demonstrated that persistent authentication tokens must not be generated from predictable user data or password hashes. Remember-me tokens should instead use cryptographically secure random values with proper expiration and revocation controls.
 
+### PortSwigger — Offline password cracking
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Stored XSS / Weak Persistent Authentication Token
+- **Result:** Solved
+- **Tools used:** Burp Suite / Browser DevTools
+
+The application stored a password-derived value inside the persistent `stay-logged-in` cookie.
+
+By inspecting my own cookie, I confirmed that the token was Base64-encoded and followed the structure:
+
+```text
+username:md5(password)
+```
+
+The comment functionality was also vulnerable to stored XSS.
+
+I used this XSS vulnerability to make the victim's browser expose its cookies when the victim viewed the affected blog post. This allowed me to obtain Carlos's `stay-logged-in` cookie.
+
+After Base64-decoding the cookie, I recovered a value containing the victim username and an MD5 hash of the password.
+
+Because the password hash was unsalted and based on a weak password, it could be cracked offline using known password hashes or password-cracking tools.
+
+Once the password was recovered, I authenticated as the victim and deleted the account to solve the lab.
+
+This lab demonstrated how multiple weaknesses can be chained together. A stored XSS vulnerability can expose persistent authentication cookies, while password-derived tokens and unsalted hashes can turn cookie theft into full credential recovery.
+
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
 - [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
