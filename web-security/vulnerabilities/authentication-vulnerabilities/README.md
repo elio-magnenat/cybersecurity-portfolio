@@ -257,6 +257,22 @@ Tools such as Burp Suite macros or Turbo Intruder can automate these multi-step 
 
 This demonstrates that 2FA verification endpoints require their own robust brute-force protections, such as rate limiting, attempt counters, temporary lockouts, and server-side monitoring.
 
+### Other authentication mechanisms
+
+Authentication security is not limited to the main login page.
+
+Applications often provide additional account-management functionality such as:
+
+- Password changes
+- Password reset flows
+- Account recovery mechanisms
+
+These features can introduce vulnerabilities even when the primary login mechanism is secure.
+
+An attacker who can create their own account may be able to study these workflows in detail and identify weaknesses in how identity is verified or how sensitive account changes are authorized.
+
+All authentication-related functionality should therefore be protected with the same level of care as the main login process.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
@@ -488,7 +504,7 @@ This lab demonstrated that multi-step authentication must securely bind every st
 
 The application asked for a 2FA verification code after the password step, but it did not correctly enforce this second authentication step before allowing access to the account page.
 After logging in with valid credentials, it was possible to directly access the protected account page without entering the verification code.
-This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been completed.
+This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been successfully completed.
 
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
