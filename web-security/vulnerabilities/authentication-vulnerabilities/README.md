@@ -301,6 +301,19 @@ Even hashed values may still be vulnerable if:
 - The underlying values are predictable
 - Weak passwords are used as part of the token
 
+If a persistent authentication cookie contains a hash derived from the user's password, weak passwords may sometimes be recovered offline.
+
+Attackers can compare the hash against precomputed hashes of common password lists or generate hashes from candidate passwords until a match is found.
+
+This is especially dangerous when:
+
+- The password is common
+- The hashing algorithm is known
+- No salt is used
+- The hash is exposed directly in the cookie
+
+This demonstrates why password-derived authentication tokens are unsafe. Persistent tokens should be random and independent from the user's password.
+
 An attacker may also obtain a remember-me cookie through another vulnerability such as XSS and use it to understand how the token is constructed.
 
 Persistent authentication tokens should therefore be generated using cryptographically secure random values and should be protected by rate limiting, expiration, revocation, and secure cookie attributes.
