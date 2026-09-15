@@ -538,6 +538,35 @@ The application asked for a 2FA verification code after the password step, but i
 After logging in with valid credentials, it was possible to directly access the protected account page without entering the verification code.
 This lab demonstrates that multi-factor authentication must be enforced on the server side for every protected resource. A user should only be considered fully authenticated after all required authentication steps have been completed.
 
+### PortSwigger — Brute-forcing a stay-logged-in cookie
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Predictable Persistent Authentication Token
+- **Result:** Solved
+- **Tools used:** Burp Suite / Python
+
+The application used a persistent `stay-logged-in` cookie to keep users authenticated after closing their browser.
+
+By inspecting my own cookie, I identified that it was Base64-encoded and followed the structure:
+
+```text
+base64(username:md5(password))
+```
+
+Because the cookie was derived from predictable values and used an unsalted MD5 hash of the password, it was possible to generate valid candidate cookies offline.
+
+I then targeted the victim account by generating cookies using:
+
+```text
+base64(carlos:md5(candidate-password))
+```
+
+and testing each candidate against the victim's account page.
+
+A successful request returned the authenticated account page, confirming the correct password-derived cookie.
+
+This lab demonstrated that persistent authentication tokens must not be generated from predictable user data or password hashes. Remember-me tokens should instead use cryptographically secure random values with proper expiration and revocation controls.
+
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
 - [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
