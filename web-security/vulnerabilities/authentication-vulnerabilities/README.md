@@ -668,6 +668,29 @@ Once the password was recovered, I authenticated as the victim and deleted the a
 
 This lab demonstrated how multiple weaknesses can be chained together. A stored XSS vulnerability can expose persistent authentication cookies, while password-derived tokens and unsalted hashes can turn cookie theft into full credential recovery.
 
+### PortSwigger — Password reset broken logic
+
+- **Difficulty:** Apprentice
+- **Vulnerability:** Broken Password Reset Logic
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application used a password reset token in the reset URL, but failed to validate the token when the new password was finally submitted.
+
+I first requested a password reset for my own account and inspected the reset flow in Burp Suite.
+
+The final password change request contained both a reset token and a client-controlled `username` parameter.
+
+By removing the reset token and resending the request, I confirmed that the application still accepted the password change.
+
+I then changed the `username` parameter to the victim account and submitted a new password.
+
+Because the server trusted the supplied username without requiring a valid reset token, the victim's password was changed successfully.
+
+I then logged in as the victim and accessed the account page to solve the lab.
+
+This lab demonstrated that reset tokens must be validated at the final password-change step and securely bound to the intended user. A reset flow is vulnerable if the server relies on client-controlled account identifiers after the token has been omitted or invalidated.
+
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
 - [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
