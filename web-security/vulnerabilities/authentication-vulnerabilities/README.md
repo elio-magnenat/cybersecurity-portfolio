@@ -328,6 +328,24 @@ If this verification mechanism is weak, an attacker may be able to reset another
 
 Password reset flows should therefore be treated as authentication mechanisms in their own right and protected with the same level of care as the main login process.
 
+##### Sending passwords by email
+
+A secure application should never be able to send users their existing password because passwords should not be stored in a recoverable form.
+
+Some applications instead generate a new password and send it by email.
+
+This approach is still risky because email is not designed to securely transport or store long-lived authentication secrets.
+
+If a generated password is sent by email, its security depends on controls such as:
+
+- Very short expiration
+- Requiring the user to change the password immediately
+- Preventing the temporary password from remaining valid indefinitely
+
+Persistent passwords sent through email may be exposed if the mailbox, synchronization channel, or intermediate communication path is compromised.
+
+Password reset mechanisms should therefore prefer short-lived reset tokens over sending reusable passwords directly.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
