@@ -318,6 +318,16 @@ An attacker may also obtain a remember-me cookie through another vulnerability s
 
 Persistent authentication tokens should therefore be generated using cryptographically secure random values and should be protected by rate limiting, expiration, revocation, and secure cookie attributes.
 
+#### Resetting user passwords
+
+Password reset functionality is inherently security-sensitive because the user cannot authenticate using their existing password.
+
+The application must therefore rely on an alternative method to verify that the person requesting the reset is the legitimate account owner.
+
+If this verification mechanism is weak, an attacker may be able to reset another user's password and take over the account without ever knowing the original credentials.
+
+Password reset flows should therefore be treated as authentication mechanisms in their own right and protected with the same level of care as the main login process.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
