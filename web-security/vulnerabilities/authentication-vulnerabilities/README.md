@@ -379,6 +379,26 @@ If the application validates the token only when displaying the reset page but n
 
 This demonstrates that every step of a password reset flow must enforce the same server-side authorization state.
 
+###### Password reset poisoning
+
+Password reset links may also be vulnerable if the application dynamically constructs the reset URL using attacker-controlled request data.
+
+For example, the application may use headers such as `Host` or `X-Forwarded-Host` when generating the password reset link.
+
+If these values are trusted without validation, an attacker may be able to cause the application to generate a reset link that points to an attacker-controlled domain:
+
+```text
+https://attacker.example/reset-password?token=<secret-token>
+```
+
+The victim may then receive this poisoned link in a legitimate password reset email and click it.
+
+Because the reset token is included in the URL, the victim's browser sends the token to the attacker's server.
+
+The attacker can then reuse the stolen token on the legitimate application to reset the victim's password.
+
+Password reset URLs should therefore be generated from trusted server-side configuration and must not rely on unvalidated client-controlled headers.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
