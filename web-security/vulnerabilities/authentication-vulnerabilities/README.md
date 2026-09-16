@@ -346,6 +346,39 @@ Persistent passwords sent through email may be exposed if the mailbox, synchroni
 
 Password reset mechanisms should therefore prefer short-lived reset tokens over sending reusable passwords directly.
 
+##### Resetting passwords using a URL
+
+Password reset flows commonly use a unique URL that allows the user to choose a new password.
+
+Weak implementations may identify the account using a predictable parameter:
+
+```text
+/reset-password?user=victim-user
+```
+
+If the application trusts this value, an attacker may be able to change the username and reset another user's password.
+
+A more secure design uses a high-entropy, unpredictable reset token:
+
+```text
+/reset-password?token=<random-token>
+```
+
+The server should associate this token with a specific user and validate it before allowing the password reset.
+
+Reset tokens should be:
+
+- Cryptographically unpredictable
+- Bound to a single account
+- Short-lived
+- Invalidated immediately after use
+
+The token must also be validated again when the reset form is submitted.
+
+If the application validates the token only when displaying the reset page but not when processing the final password change request, an attacker may be able to remove or modify the token and reset an arbitrary user's password.
+
+This demonstrates that every step of a password reset flow must enforce the same server-side authorization state.
+
 ## Impact
 Authentication vulnerabilities can allow attackers to access accounts they do not own.
 Possible impacts include:
