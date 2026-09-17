@@ -421,13 +421,18 @@ Authentication should be designed so that attackers cannot easily guess credenti
 The application should:
 - Enforce strong password policies
 - Encourage long and unique passwords instead of only requiring predictable complexity rules
+- Use password-strength estimation instead of relying only on predictable complexity rules
+- Enforce HTTPS for all authentication traffic and redirect HTTP requests to HTTPS
 - Rate-limit repeated login attempts
+- Ensure rate limiting cannot be bypassed using attacker-controlled client IP headers
 - Add temporary delays or lockouts after too many failed attempts
 - Use multi-factor authentication for sensitive accounts or actions
 - Make sure all authentication steps are completed before creating a fully authenticated session
 - Return similar error messages for valid and invalid usernames
 - Avoid exposing usernames or email addresses unnecessarily
 - Protect password reset and account recovery mechanisms
+- Apply the same security requirements to password reset, password change, account recovery, and other supplementary authentication functionality
+- Thoroughly audit authentication and verification logic for bypassable checks
 - Store passwords securely using strong password hashing
 - Monitor and log suspicious authentication attempts
 
