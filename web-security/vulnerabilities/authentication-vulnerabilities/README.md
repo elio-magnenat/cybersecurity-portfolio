@@ -736,6 +736,39 @@ This allowed me to set a new password for the victim account and log in successf
 
 This lab demonstrated that password reset URLs must be generated from trusted server-side configuration. Headers such as `X-Forwarded-Host` must never be trusted blindly when constructing security-sensitive links.
 
+### PortSwigger — Password brute-force via password change
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Password Brute Force / Password Change Logic Flaw
+- **Result:** Solved
+- **Tool used:** Burp Suite Intruder
+
+The password change functionality exposed a logic flaw that made it possible to brute-force another user's current password.
+
+The request contained a client-controlled `username` parameter together with the current password and the two new password fields.
+
+I observed that the application returned different error messages depending on whether the supplied current password was correct.
+
+When the current password was incorrect and the two new passwords were different, the application returned:
+
+```text
+Current password is incorrect
+```
+
+When the current password was correct but the two new passwords did not match, it instead returned:
+
+```text
+New passwords do not match
+```
+
+I changed the username to the victim account, placed a payload position on the `current-password` parameter, and used Burp Intruder to test the provided password list.
+
+I added a grep match rule for `New passwords do not match`, which allowed me to identify the single request where the current password was valid.
+
+I then used the recovered password to log in to the victim account and solve the lab.
+
+This lab demonstrated that password-change functionality can become a password-verification oracle when error messages reveal whether the supplied current password is valid. Sensitive account-management endpoints must verify the authenticated user securely and avoid exposing distinguishable authentication states.
+
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
 - [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
