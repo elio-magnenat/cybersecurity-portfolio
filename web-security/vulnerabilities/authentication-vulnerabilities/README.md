@@ -711,6 +711,31 @@ I then logged in as the victim and accessed the account page to solve the lab.
 
 This lab demonstrated that reset tokens must be validated at the final password-change step and securely bound to the intended user. A reset flow is vulnerable if the server relies on client-controlled account identifiers after the token has been omitted or invalidated.
 
+### PortSwigger — Password reset poisoning via middleware
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Password Reset Poisoning / Host Header Injection
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application generated password reset links dynamically and trusted the `X-Forwarded-Host` header when constructing the URL.
+
+I first inspected the password reset flow and confirmed that a unique reset token was sent to the user by email.
+
+Using Burp Repeater, I added an attacker-controlled `X-Forwarded-Host` value to the `POST /forgot-password` request.
+
+The application then generated a password reset link using the supplied host instead of the legitimate application domain.
+
+I targeted the victim account and caused the reset email to contain a link pointing to my exploit server.
+
+When the victim followed this poisoned link, the browser sent the reset token to my server as part of the URL.
+
+I recovered the victim's token from the exploit server access logs and reused it with a legitimate reset URL.
+
+This allowed me to set a new password for the victim account and log in successfully.
+
+This lab demonstrated that password reset URLs must be generated from trusted server-side configuration. Headers such as `X-Forwarded-Host` must never be trusted blindly when constructing security-sensitive links.
+
 ## References
 - [PortSwigger Web Security Academy — Authentication vulnerabilities](https://portswigger.net/web-security/authentication)
 - [PortSwigger Web Security Academy — Password-based authentication](https://portswigger.net/web-security/authentication/password-based)
