@@ -390,3 +390,121 @@ may indicate that the tested endpoint exists, but the current HTTP method is not
 This can reveal hidden functionality even when the request itself fails.
 
 The goal is therefore not only to find requests that return `200 OK`, but to identify any response that behaves differently from requests to non-existent endpoints.
+
+
+## Finding Hidden Parameters
+
+APIs may support parameters that are not documented or exposed through the normal application interface.
+
+These hidden parameters can sometimes influence application behavior and may reveal functionality that was not intended to be directly accessible.
+
+For example, an API request may normally contain:
+
+```json
+{
+  "username": "wiener"
+}
+```
+
+but the endpoint may also accept additional parameters such as:
+
+```json
+{
+  "username": "wiener",
+  "role": "admin"
+}
+```
+
+even if `role` is not documented.
+
+### Discovering hidden parameters
+
+Hidden parameters can be identified by testing likely parameter names and observing how the API responds.
+
+Useful candidate names may come from:
+
+- Existing parameters
+- JavaScript files
+- API responses
+- Error messages
+- Business terminology used by the application
+- Common field names such as `role`, `admin`, `status`, `discount`, or `permissions`
+
+The goal is to determine whether adding or modifying an undocumented parameter changes the server's behavior.
+
+Interesting indicators include:
+
+- Different response bodies
+- Different HTTP status codes
+- New fields appearing in responses
+- Unexpected changes to application state
+- Validation errors that reveal expected parameter names
+
+Automated wordlists can help test large numbers of possible parameter names, but application-specific names discovered during reconnaissance are often more valuable.
+
+## Mass Assignment Vulnerabilities
+
+Mass assignment, also known as auto-binding, occurs when an application automatically maps request parameters to fields of an internal object.
+
+This can become a security issue when the application accepts fields that the user was never intended to control.
+
+For example, an internal user object might contain:
+
+```text
+username
+email
+role
+isAdmin
+```
+
+The application may only intend to let the user update their email:
+
+```json
+{
+  "email": "new@example.com"
+}
+```
+
+However, if the framework automatically binds every supplied field to the internal object, an attacker may try:
+
+```json
+{
+  "email": "new@example.com",
+  "isAdmin": true
+}
+```
+
+If the server accepts the additional field, the attacker may be able to modify sensitive internal properties.
+
+### Why mass assignment happens
+
+Modern frameworks often provide automatic object binding to simplify development.
+
+Instead of manually assigning each permitted field, the application may accept an entire request object and map matching parameter names directly to properties of an internal model.
+
+Conceptually:
+
+```text
+Request data
+    ↓
+Automatic binding
+    ↓
+Internal application object
+```
+
+This becomes dangerous when sensitive properties are included in the internal object but are not explicitly blocked from user input.
+
+### Security impact
+
+Depending on the exposed fields, mass assignment may allow an attacker to:
+
+- Change account privileges
+- Modify roles or permissions
+- Alter account status
+- Change ownership information
+- Modify internal flags
+- Manipulate values such as discounts or balances
+
+The impact depends on which internal properties can be controlled.
+
+The key testing idea is to look for fields that appear in API responses or internal object structures but are not normally present in client requests, then check whether the server accepts them when they are added manually.
