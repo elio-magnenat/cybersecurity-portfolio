@@ -313,3 +313,80 @@ If the server accepts both requests, this indicates that the endpoint supports m
 The responses should then be compared carefully for differences in status codes, error messages, validation behavior, and processing logic.
 
 Testing multiple supported content types can reveal attack surface that would remain hidden if only the format used by the normal application interface were tested.
+
+
+## Discovering Hidden Endpoints
+
+Once some API endpoints have been identified, their structure can be used to search for additional functionality that is not directly exposed by the application.
+
+For example, suppose the following endpoint is known:
+
+```http
+PUT /api/user/update
+```
+
+The final part of the path may represent an action. Other likely actions can then be tested in the same position, such as:
+
+```text
+/api/user/delete
+/api/user/add
+/api/user/create
+/api/user/reset
+```
+
+This technique consists of replacing part of a known path with candidate values and observing how the server responds.
+
+### Choosing useful candidate values
+
+Generic API wordlists can help discover common endpoint names, but application-specific terms are often even more useful.
+
+Good candidates may come from:
+
+- Existing endpoint names
+- Page names and visible features
+- JavaScript files
+- Parameter names
+- Business terminology used by the application
+- Common API actions such as `add`, `delete`, `update`, `create`, or `reset`
+
+For example, an application related to orders might use endpoints such as:
+
+```text
+/api/orders/create
+/api/orders/cancel
+/api/orders/refund
+```
+
+while an account management API might expose:
+
+```text
+/api/user/reset-password
+/api/user/disable
+/api/user/permissions
+```
+
+### What to look for
+
+Responses should be compared carefully when testing candidate paths.
+
+Useful indicators include:
+
+- Different HTTP status codes
+- Different response lengths
+- Redirects
+- Error messages
+- Authentication errors
+- Method-related errors
+
+For example, a response such as:
+
+```http
+HTTP/2 405 Method Not Allowed
+Allow: POST
+```
+
+may indicate that the tested endpoint exists, but the current HTTP method is not accepted.
+
+This can reveal hidden functionality even when the request itself fails.
+
+The goal is therefore not only to find requests that return `200 OK`, but to identify any response that behaves differently from requests to non-existent endpoints.
