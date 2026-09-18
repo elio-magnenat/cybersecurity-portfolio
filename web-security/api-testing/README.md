@@ -224,3 +224,92 @@ reveals that the endpoint expects a parameter named `username`.
 Similarly, an error indicating that a specific content type is required can reveal the format expected by the API.
 
 This means that error responses are not only signs of failed requests. They can also provide clues that help reconstruct valid requests and discover additional API functionality.
+
+
+## Identifying Supported Content Types
+
+API endpoints often expect request data to be sent in a specific format.
+
+The format is usually indicated by the `Content-Type` header.
+
+Common examples include:
+
+```http
+Content-Type: application/json
+```
+
+```http
+Content-Type: application/xml
+```
+
+```http
+Content-Type: application/x-www-form-urlencoded
+```
+
+An API may process the same logical data differently depending on the selected content type.
+
+For example, an endpoint may normally receive JSON:
+
+```json
+{
+  "username": "wiener"
+}
+```
+
+but may also accept equivalent XML data:
+
+```xml
+<username>wiener</username>
+```
+
+### Why testing different content types matters
+
+Changing the content type can expose different processing paths inside the application.
+
+This may help to:
+
+- Reveal useful error messages
+- Discover additional supported formats
+- Bypass validation or filtering logic
+- Reach vulnerable parsers
+- Expose differences in how the server handles the same input
+
+For example, an endpoint may correctly validate JSON input but process XML input using a different parser with weaker protections.
+
+This means that an endpoint should not be considered secure simply because one supported format behaves safely.
+
+### Testing content types
+
+When testing another content type, both the request header and the request body must be changed consistently.
+
+For example:
+
+```http
+Content-Type: application/json
+```
+
+with:
+
+```json
+{
+  "username": "wiener"
+}
+```
+
+could be changed to:
+
+```http
+Content-Type: application/xml
+```
+
+with:
+
+```xml
+<username>wiener</username>
+```
+
+If the server accepts both requests, this indicates that the endpoint supports multiple input formats.
+
+The responses should then be compared carefully for differences in status codes, error messages, validation behavior, and processing logic.
+
+Testing multiple supported content types can reveal attack surface that would remain hidden if only the format used by the normal application interface were tested.
