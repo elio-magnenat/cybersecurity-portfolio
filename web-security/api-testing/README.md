@@ -1383,3 +1383,48 @@ Determine whether the internal request can actually be modified
 The objective is to distinguish normal input processing from a real server-side injection vulnerability.
 
 Automation is therefore useful for discovering potential entry points, while manual testing is required to understand and confirm their security impact.
+
+
+### Preventing Server-Side Parameter Pollution
+
+Server-side parameter pollution can be reduced by strictly controlling how user input is included in server-side requests.
+
+A key defense is to use an allowlist that defines which characters or values are permitted.
+
+Any user-controlled data that does not match the expected format should either be rejected or safely encoded before being inserted into another request.
+
+### Main Defenses
+
+Applications should:
+
+- Define the expected format of every input
+- Allow only valid characters or values
+- Encode user-controlled data before inserting it into query strings, paths, JSON, XML, or other structured formats
+- Avoid building server-side requests through unsafe string concatenation
+- Validate that the final request structure matches what the application expects
+
+For example, if an input is supposed to contain only a username, values containing unexpected structural characters such as:
+
+```text
+&
+#
+/
+"
+\
+```
+
+should not be allowed to alter the structure of the internal request.
+
+The general principle is:
+
+```text
+User input
+        ↓
+Validation
+        ↓
+Safe encoding
+        ↓
+Server-side request
+```
+
+User-controlled input should remain data and should never be able to become part of the request structure itself.
