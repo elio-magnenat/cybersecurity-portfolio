@@ -1304,3 +1304,82 @@ This means that data should not be considered safe simply because it was previou
 The same principle applies to other structured formats such as XML.
 
 The key idea is that whenever user-controlled data is embedded into structured data, it must remain data and must not be allowed to alter the surrounding structure.
+
+
+### Testing Server-Side Parameter Pollution with Automated Tools
+
+Automated security testing tools can help identify behavior that may indicate server-side parameter pollution.
+
+A useful signal is an unexpected transformation of user-controlled input.
+
+For example:
+
+```text
+User input
+    ↓
+Application modifies or decodes the value
+    ↓
+Modified value is reused in another server-side request
+```
+
+This behavior does not automatically mean that a vulnerability exists.
+
+An application may legitimately transform input before processing it.
+
+However, transformations involving characters such as:
+
+```text
+&
+#
+/
+..
+"
+\
+```
+
+can be worth investigating when the value is later inserted into:
+
+- Query strings
+- URL paths
+- JSON
+- XML
+- Other structured server-side requests
+
+### Automated Detection
+
+Automated scanners may identify inputs whose behavior differs from normal values.
+
+They may flag cases where:
+
+- Encoded characters are decoded
+- Input structure changes
+- Additional parameters appear to be created
+- Path normalization occurs
+- Structured data is modified
+- Error messages change unexpectedly
+
+These findings should be treated as indicators rather than confirmed vulnerabilities.
+
+### Manual Verification
+
+Suspicious results should be verified manually.
+
+A useful workflow is:
+
+```text
+Automated tool detects unusual behavior
+        ↓
+Identify the affected input
+        ↓
+Reproduce the request manually
+        ↓
+Change one element at a time
+        ↓
+Compare responses
+        ↓
+Determine whether the internal request can actually be modified
+```
+
+The objective is to distinguish normal input processing from a real server-side injection vulnerability.
+
+Automation is therefore useful for discovering potential entry points, while manual testing is required to understand and confirm their security impact.
