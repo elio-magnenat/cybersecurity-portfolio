@@ -1136,3 +1136,171 @@ When testing this behavior, compare the application's response for clues such as
 - Changes in response length or content
 
 The objective is to determine whether user-controlled input can modify the path of a server-side request and cause the internal API to access a different resource.
+
+
+### Testing Server-Side Parameter Pollution in Structured Data
+
+Server-side parameter pollution can also affect structured data formats such as JSON or XML.
+
+The vulnerability appears when user-controlled input is inserted into structured data that the application later sends to an internal API.
+
+For example, a public request may contain:
+
+```http
+POST /myaccount
+
+name=peter
+```
+
+The application may then construct an internal API request such as:
+
+```http
+PATCH /users/7312/update
+Content-Type: application/json
+
+{
+  "name": "peter"
+}
+```
+
+If the `name` value is inserted directly into the JSON structure without adequate validation or encoding, an attacker may attempt to inject additional JSON properties.
+
+For example:
+
+```text
+peter","access_level":"administrator
+```
+
+could potentially transform the internal request into:
+
+```json
+{
+  "name": "peter",
+  "access_level": "administrator"
+}
+```
+
+The attacker has now changed the structure of the internal JSON object instead of only controlling the value of `name`.
+
+### Why this is dangerous
+
+The application may intend to expose only a limited field such as:
+
+```text
+name
+```
+
+while the internal API may support additional sensitive properties such as:
+
+```text
+access_level
+role
+permissions
+isAdmin
+```
+
+If an attacker can inject one of these properties into the server-side request, they may be able to modify data or privileges that the public application was never intended to expose.
+
+Conceptually:
+
+```text
+Expected input:
+peter
+        ↓
+{"name":"peter"}
+```
+
+but with crafted input:
+
+```text
+peter","access_level":"administrator
+        ↓
+{"name":"peter","access_level":"administrator"}
+```
+
+### What to look for
+
+Useful indicators include:
+
+- Different validation errors
+- Changes in the returned JSON
+- Additional properties being accepted
+- Changes to the user's account or permissions
+- Different behavior after injecting structured syntax
+
+The important goal is to determine whether user-controlled data is treated purely as a value or whether it can escape its intended position and modify the structure of the server-side request.
+
+### Structured Data Already Supplied as JSON
+
+The same issue can occur even when the client already sends JSON.
+
+For example, the browser may send:
+
+```http
+POST /myaccount
+Content-Type: application/json
+
+{
+  "name": "peter"
+}
+```
+
+The application may decode this JSON, extract the `name` value, and then build another JSON request for an internal API:
+
+```http
+PATCH /users/7312/update
+Content-Type: application/json
+
+{
+  "name": "peter"
+}
+```
+
+If the extracted value is inserted into the new JSON structure without being encoded safely, structured data can still be injected.
+
+For example, a crafted client request may contain:
+
+```json
+{
+  "name": "peter\",\"access_level\":\"administrator"
+}
+```
+
+After decoding and unsafe reconstruction, the internal API request could become:
+
+```json
+{
+  "name": "peter",
+  "access_level": "administrator"
+}
+```
+
+This shows that using JSON on the client side does not automatically prevent structured data injection.
+
+The important question is how the application handles the value after decoding it and before embedding it into another structured request.
+
+### Structured Data Injection in Responses
+
+Structured format injection can also affect responses.
+
+For example, user-controlled data may be stored safely in a database but later inserted into a JSON response from a back-end API without adequate encoding.
+
+Conceptually:
+
+```text
+User-controlled value
+        ↓
+Stored safely
+        ↓
+Read from database
+        ↓
+Inserted unsafely into JSON response
+        ↓
+Response structure modified
+```
+
+This means that data should not be considered safe simply because it was previously stored in the application's database.
+
+The same principle applies to other structured formats such as XML.
+
+The key idea is that whenever user-controlled data is embedded into structured data, it must remain data and must not be allowed to alter the surrounding structure.
