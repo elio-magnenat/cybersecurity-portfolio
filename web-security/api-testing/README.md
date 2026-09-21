@@ -1034,3 +1034,105 @@ Compare the application's responses
 ```
 
 The important goal is to determine whether user-controlled input can modify the structure of the server-side request, rather than simply changing the value of the original parameter.
+
+
+### Testing Server-Side Parameter Pollution in REST Paths
+
+REST APIs often place resource identifiers directly inside the URL path rather than in the query string.
+
+For example:
+
+```text
+/api/users/123
+```
+
+can be interpreted as:
+
+```text
+/api
+/users
+/123
+```
+
+where:
+
+- `/api` is the API root
+- `/users` is the resource
+- `/123` identifies a specific user
+
+A vulnerability may appear when user-controlled input is inserted directly into an internal API path without adequate validation or encoding.
+
+For example, a public request may look like:
+
+```http
+GET /edit_profile.php?name=peter
+```
+
+The application may then construct an internal request such as:
+
+```http
+GET /api/private/users/peter
+```
+
+If the `name` value is inserted directly into the internal path, an attacker may attempt to modify the path structure.
+
+One possible test is to inject URL-encoded path traversal sequences.
+
+For example:
+
+```http
+GET /edit_profile.php?name=peter%2f..%2fadmin
+```
+
+may cause the application to construct:
+
+```http
+GET /api/private/users/peter/../admin
+```
+
+If the internal HTTP client or API normalizes the path, this may become:
+
+```http
+GET /api/private/users/admin
+```
+
+This means the attacker may be able to access a different internal resource than the application originally intended.
+
+### Why this works
+
+The issue appears when user input is treated as part of the URL path structure instead of being safely handled as a simple value.
+
+Conceptually:
+
+```text
+Expected input:
+peter
+        ↓
+/api/private/users/peter
+```
+
+but with crafted input:
+
+```text
+peter/../admin
+        ↓
+/api/private/users/peter/../admin
+        ↓
+path normalization
+        ↓
+/api/private/users/admin
+```
+
+The important question is whether the server-side client or internal API normalizes the injected path.
+
+### What to look for
+
+When testing this behavior, compare the application's response for clues such as:
+
+- Different user data being returned
+- Different status codes
+- Access to another internal resource
+- Authorization errors
+- Changes in response length or content
+
+The objective is to determine whether user-controlled input can modify the path of a server-side request and cause the internal API to access a different resource.
