@@ -1,7 +1,5 @@
 # Server-Side Parameter Pollution
 
-## Server-Side Parameter Pollution
-
 Server-side parameter pollution occurs when an application includes user-controlled input inside a request to another server-side API without safely encoding or validating it.
 
 The attacker does not necessarily communicate with the internal API directly.
@@ -50,7 +48,7 @@ username=wiener&details=full
 
 Depending on how the internal API parses duplicated or additional parameters, this may modify how the request is processed.
 
-### Possible impact
+## Possible impact
 
 Server-side parameter pollution may allow an attacker to:
 
@@ -62,7 +60,7 @@ Server-side parameter pollution may allow an attacker to:
 
 The exact impact depends on how the internal API handles the manipulated request.
 
-### Possible input locations
+## Possible input locations
 
 Any user-controlled value that is reused inside a server-side request may potentially be interesting to test.
 
@@ -75,7 +73,7 @@ Examples include:
 
 The important point is not where the input originally appears, but whether the server later inserts it into another request without correctly separating user data from the structure of that request.
 
-### Key concept
+## Key concept
 
 The vulnerability can be summarized as:
 
@@ -96,7 +94,7 @@ Mass assignment involves supplying additional object properties that the applica
 Server-side parameter pollution instead involves manipulating the structure or parameters of a request that the application sends to another server-side component.
 
 
-### Testing Server-Side Parameter Pollution in Query Strings
+## Testing Server-Side Parameter Pollution in Query Strings
 
 When user-controlled input is reused to build a request to an internal API, query-string syntax can sometimes be injected into that internal request.
 
@@ -124,7 +122,7 @@ GET /users/search?name=peter&publicProfile=true
 
 The objective is to determine whether manipulating the public `name` parameter can change the structure of this internal request.
 
-#### Truncating the Internal Query String
+### Truncating the Internal Query String
 
 The `#` character normally introduces a URL fragment.
 
@@ -186,7 +184,7 @@ query potentially truncated after peter
 
 If truncation removes a security-related parameter, it may expose information or functionality that should normally remain restricted.
 
-#### Injecting Additional Parameters
+### Injecting Additional Parameters
 
 The `&` character separates parameters in a query string.
 
@@ -222,7 +220,7 @@ can help determine whether the structure of the internal query has been modified
 
 An unchanged response does not necessarily mean the injection failed. The internal API may simply ignore unknown parameters.
 
-#### Injecting Valid Parameters
+### Injecting Valid Parameters
 
 Once parameter injection appears possible, known or suspected API parameters can be tested.
 
@@ -242,7 +240,7 @@ The response can then be compared with the original request to determine whether
 
 Parameters discovered during API reconnaissance, error analysis, or hidden-parameter testing are particularly useful candidates.
 
-#### Overriding Existing Parameters
+### Overriding Existing Parameters
 
 A stronger test is to inject another parameter with the same name as one that already exists.
 
@@ -299,7 +297,7 @@ name=administrator
 
 if the internal API accepts the injected duplicate parameter.
 
-### Testing Strategy
+## Testing Strategy
 
 A practical testing sequence is:
 
@@ -322,7 +320,7 @@ Compare the application's responses
 The important goal is to determine whether user-controlled input can modify the structure of the server-side request, rather than simply changing the value of the original parameter.
 
 
-### Testing Server-Side Parameter Pollution in REST Paths
+## Testing Server-Side Parameter Pollution in REST Paths
 
 REST APIs often place resource identifiers directly inside the URL path rather than in the query string.
 
@@ -384,7 +382,7 @@ GET /api/private/users/admin
 
 This means the attacker may be able to access a different internal resource than the application originally intended.
 
-### Why this works
+## Why this works
 
 The issue appears when user input is treated as part of the URL path structure instead of being safely handled as a simple value.
 
@@ -411,7 +409,7 @@ path normalization
 
 The important question is whether the server-side client or internal API normalizes the injected path.
 
-### What to look for
+## What to look for
 
 When testing this behavior, compare the application's response for clues such as:
 
@@ -424,7 +422,7 @@ When testing this behavior, compare the application's response for clues such as
 The objective is to determine whether user-controlled input can modify the path of a server-side request and cause the internal API to access a different resource.
 
 
-### Testing Server-Side Parameter Pollution in Structured Data
+## Testing Server-Side Parameter Pollution in Structured Data
 
 Server-side parameter pollution can also affect structured data formats such as JSON or XML.
 
@@ -468,7 +466,7 @@ could potentially transform the internal request into:
 
 The attacker has now changed the structure of the internal JSON object instead of only controlling the value of `name`.
 
-### Why this is dangerous
+## Why this is dangerous
 
 The application may intend to expose only a limited field such as:
 
@@ -504,7 +502,7 @@ peter","access_level":"administrator
 {"name":"peter","access_level":"administrator"}
 ```
 
-### What to look for
+## What to look for
 
 Useful indicators include:
 
@@ -516,7 +514,7 @@ Useful indicators include:
 
 The important goal is to determine whether user-controlled data is treated purely as a value or whether it can escape its intended position and modify the structure of the server-side request.
 
-### Structured Data Already Supplied as JSON
+## Structured Data Already Supplied as JSON
 
 The same issue can occur even when the client already sends JSON.
 
@@ -565,7 +563,7 @@ This shows that using JSON on the client side does not automatically prevent str
 
 The important question is how the application handles the value after decoding it and before embedding it into another structured request.
 
-### Structured Data Injection in Responses
+## Structured Data Injection in Responses
 
 Structured format injection can also affect responses.
 
@@ -592,7 +590,7 @@ The same principle applies to other structured formats such as XML.
 The key idea is that whenever user-controlled data is embedded into structured data, it must remain data and must not be allowed to alter the surrounding structure.
 
 
-### Testing Server-Side Parameter Pollution with Automated Tools
+## Testing Server-Side Parameter Pollution with Automated Tools
 
 Automated security testing tools can help identify behavior that may indicate server-side parameter pollution.
 
@@ -631,7 +629,7 @@ can be worth investigating when the value is later inserted into:
 - XML
 - Other structured server-side requests
 
-### Automated Detection
+## Automated Detection
 
 Automated scanners may identify inputs whose behavior differs from normal values.
 
@@ -646,7 +644,7 @@ They may flag cases where:
 
 These findings should be treated as indicators rather than confirmed vulnerabilities.
 
-### Manual Verification
+## Manual Verification
 
 Suspicious results should be verified manually.
 
@@ -671,7 +669,7 @@ The objective is to distinguish normal input processing from a real server-side 
 Automation is therefore useful for discovering potential entry points, while manual testing is required to understand and confirm their security impact.
 
 
-### Preventing Server-Side Parameter Pollution
+## Preventing Server-Side Parameter Pollution
 
 Server-side parameter pollution can be reduced by strictly controlling how user input is included in server-side requests.
 
@@ -679,7 +677,7 @@ A key defense is to use an allowlist that defines which characters or values are
 
 Any user-controlled data that does not match the expected format should either be rejected or safely encoded before being inserted into another request.
 
-### Main Defenses
+## Main Defenses
 
 Applications should:
 
