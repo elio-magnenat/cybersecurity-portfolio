@@ -1,39 +1,52 @@
 # Cybersecurity Portfolio
 
-Welcome to my cybersecurity portfolio.
+This repository documents my cybersecurity learning through concise theory notes, practical testing methodology, and write-ups from authorized training labs.
 
-This repository documents what I learn about cybersecurity alongside my studies. It contains clear notes, practical exercises, lab reports, and small projects created while I improve my technical skills.
+My current focus is **web application security**, with most practical work based on intentionally vulnerable environments such as the PortSwigger Web Security Academy.
 
-## Current focus
+## Current progress
 
-I am currently focusing on web application security, including:
+Completed learning paths:
 
-- HTTP requests and responses
-- Burp Suite
-- Common web vulnerabilities
-- OWASP Juice Shop
-- PortSwigger Web Security Academy
-- Vulnerability detection and remediation
+| Learning path | Progress | Completed |
+| --- | ---: | --- |
+| Server-side vulnerabilities | 52 / 52 | 13 Aug 2026 |
+| SQL injection | 51 / 51 | 26 Aug 2026 |
+| Authentication vulnerabilities | 55 / 55 | 17 Sep 2026 |
+| API testing | 29 / 29 | 21 Sep 2026 |
 
-## What you can find here
+**Next learning path:** Server-side request forgery (SSRF) attacks.
 
-This repository may include:
+## Quick navigation
 
-- Explanations written in my own words
-- Notes about cybersecurity concepts
-- Analyses of training labs
-- Vulnerability reports
-- Security recommendations
-- Small scripts and personal projects
-- Lessons learned during practical exercises
-
-The goal is not only to record completed exercises, but also to show that I understand how vulnerabilities work, how they can be identified, what impact they may have, and how they can be fixed.
+- [Web Security](web-security/README.md)
+  - [API Testing](web-security/api-testing/README.md)
+  - [Web Vulnerabilities](web-security/vulnerabilities/README.md)
+- Selected topics:
+  - [SQL Injection](web-security/vulnerabilities/sql-injection/README.md)
+  - [Authentication Vulnerabilities](web-security/vulnerabilities/authentication-vulnerabilities/README.md)
+  - [Server-Side Request Forgery (SSRF)](web-security/vulnerabilities/ssrf/README.md)
 
 ## Repository structure
 
-The repository will grow as I learn new areas of cybersecurity.
+```text
+cybersecurity-portfolio/
+├── README.md
+└── web-security/
+    ├── README.md
+    ├── api-testing/
+    └── vulnerabilities/
+```
 
-More sections may be added later, such as network security, Linux and Windows security, Active Directory, malware analysis, cloud security, or cryptography.
+The topic folders contain a mix of:
+
+- Explanations written in my own words
+- Testing and detection methodology
+- Practical lab write-ups
+- Security impact and prevention notes
+- References to external security resources
+
+Where a topic contains several practical exercises, theory and labs are kept in separate files to make the repository easier to navigate.
 
 ## Ethics
 
@@ -44,10 +57,8 @@ All security testing documented in this repository is performed only on:
 - Systems that I own
 - Environments where I have explicit permission to test
 
-This repository is created for educational and defensive purposes.
+This repository is intended for educational and defensive security learning.
 
-## About me
+## About
 
-I am a student developing my cybersecurity knowledge through personal learning, practical labs, and technical projects alongside my studies.
-
-This portfolio will continue to evolve as I gain more experience.
+I am a computer science student developing practical cybersecurity skills alongside my studies. This portfolio is a record of that progression and will continue to evolve as I cover new areas.
