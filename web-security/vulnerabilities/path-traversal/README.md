@@ -92,9 +92,9 @@ A successful test should use the minimum amount of sensitive data required to pr
 - **CWE:** CWE-22 — Improper Limitation of a Pathname to a Restricted Directory
 - **OWASP WSTG:** Testing Directory Traversal File Include
 
-## Labs completed
+## Labs
 
-- PortSwigger — File path traversal, simple case
+- [Completed labs](labs.md)
 
 ## References
 - [PortSwigger Web Security Academy — Path traversal](https://portswigger.net/web-security/file-path-traversal)
