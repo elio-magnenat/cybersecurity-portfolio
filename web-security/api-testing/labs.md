@@ -98,3 +98,73 @@ I then added the product to the basket and completed the purchase.
 This lab demonstrated that API functionality may exist even when it is not used by the visible application interface.
 
 It also showed how testing alternative HTTP methods and carefully analyzing error responses can reveal the exact structure required to interact with hidden or unintended API functionality.
+
+
+### PortSwigger — Exploiting a mass assignment vulnerability
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Mass Assignment
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a mass assignment vulnerability in the checkout API.
+
+After adding the target product to the basket and attempting to place the order, I inspected the API requests related to:
+
+```http
+/api/checkout
+```
+
+I compared the `GET` and `POST` requests and noticed an important difference.
+
+The `GET` response contained an additional field:
+
+```json
+{
+  "chosen_discount": {
+    "percentage": 0
+  }
+}
+```
+
+This field was not included in the normal `POST /api/checkout` request.
+
+This suggested that `chosen_discount` was part of the internal checkout object and could potentially be accepted as an undocumented input parameter.
+
+I added the field manually to the checkout request:
+
+```json
+{
+  "chosen_discount": {
+    "percentage": 0
+  },
+  "chosen_products": [
+    {
+      "product_id": "1",
+      "quantity": 1
+    }
+  ]
+}
+```
+
+The request was accepted without error.
+
+To confirm that the server was actually processing the hidden parameter, I replaced the percentage with an invalid value.
+
+This produced a validation error, confirming that `chosen_discount` was recognized and processed by the application.
+
+I then changed the discount percentage to:
+
+```json
+{
+  "chosen_discount": {
+    "percentage": 100
+  }
+}
+```
+
+The server accepted the value and applied a 100% discount to the order, allowing the purchase to be completed without enough account credit.
+
+This lab demonstrated how comparing API responses with API requests can reveal hidden object properties.
+
+It also showed that a hidden field is not automatically a vulnerability. The issue becomes exploitable when the server accepts and applies that field without properly restricting which internal properties the user is allowed to modify.
