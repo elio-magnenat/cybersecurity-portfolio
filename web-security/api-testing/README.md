@@ -712,3 +712,99 @@ accountStatus
 should not be writable through normal user-controlled requests.
 
 The safest approach is to maintain an explicit allowlist of properties that may be updated and prevent sensitive internal fields from being modified through client input.
+
+
+## Server-Side Parameter Pollution
+
+Server-side parameter pollution occurs when an application includes user-controlled input inside a request to another server-side API without safely encoding or validating it.
+
+The attacker does not necessarily communicate with the internal API directly.
+
+Instead, the flow may look like this:
+
+```text
+User
+  ↓
+Public application
+  ↓
+Internal API
+```
+
+The vulnerability appears when user input is inserted into the internal request in a way that allows the user to modify its structure.
+
+For example, suppose the application receives:
+
+```http
+GET /account?username=wiener
+```
+
+and internally constructs a request such as:
+
+```http
+GET /internal/users?username=wiener&details=basic
+```
+
+If the value of `username` is inserted without adequate encoding, specially crafted input may introduce additional parameters into the internal request.
+
+Conceptually:
+
+```text
+Expected input:
+username=wiener
+
+Internal request:
+username=wiener&details=basic
+```
+
+An attacker may try to inject another parameter:
+
+```text
+username=wiener&details=full
+```
+
+Depending on how the internal API parses duplicated or additional parameters, this may modify how the request is processed.
+
+### Possible impact
+
+Server-side parameter pollution may allow an attacker to:
+
+- Add unexpected parameters
+- Override existing parameters
+- Change internal API behavior
+- Access data that should not be available
+- Reach functionality that is not normally exposed
+
+The exact impact depends on how the internal API handles the manipulated request.
+
+### Possible input locations
+
+Any user-controlled value that is reused inside a server-side request may potentially be interesting to test.
+
+Examples include:
+
+- Query parameters
+- Form fields
+- HTTP headers
+- URL path parameters
+
+The important point is not where the input originally appears, but whether the server later inserts it into another request without correctly separating user data from the structure of that request.
+
+### Key concept
+
+The vulnerability can be summarized as:
+
+```text
+User-controlled input
+        ↓
+Inserted into internal request
+        ↓
+Input changes request structure
+        ↓
+Internal API receives unintended parameters
+```
+
+Server-side parameter pollution is different from mass assignment.
+
+Mass assignment involves supplying additional object properties that the application automatically binds to an internal object.
+
+Server-side parameter pollution instead involves manipulating the structure or parameters of a request that the application sends to another server-side component.
