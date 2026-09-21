@@ -508,3 +508,108 @@ Depending on the exposed fields, mass assignment may allow an attacker to:
 The impact depends on which internal properties can be controlled.
 
 The key testing idea is to look for fields that appear in API responses or internal object structures but are not normally present in client requests, then check whether the server accepts them when they are added manually.
+
+
+### Identifying Hidden Parameters from API Responses
+
+Mass assignment can often be investigated by comparing the fields accepted by an update request with the fields returned by the API for the same object.
+
+For example, an update request may only contain:
+
+```json
+{
+  "username": "wiener",
+  "email": "wiener@example.com"
+}
+```
+
+while a request retrieving the same user may return:
+
+```json
+{
+  "id": 123,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "isAdmin": false
+}
+```
+
+The additional fields in the response may indicate properties that exist on the internal object even though they are not normally exposed as editable parameters.
+
+Interesting fields may include:
+
+- `id`
+- `role`
+- `isAdmin`
+- `status`
+- `permissions`
+- Ownership-related fields
+- Internal flags
+
+These fields are not automatically vulnerable, but they are good candidates for further testing.
+
+A useful approach is therefore:
+
+```text
+Compare update request fields
+        ↓
+Compare returned object fields
+        ↓
+Identify additional properties
+        ↓
+Test whether they are accepted in update requests
+```
+
+### Testing Mass Assignment
+
+Once a potentially sensitive hidden field has been identified, it can be added manually to an update request.
+
+For example:
+
+```json
+{
+  "username": "wiener",
+  "email": "wiener@example.com",
+  "isAdmin": false
+}
+```
+
+If the request is accepted, the next step is to determine whether the server is actually processing the additional field.
+
+One useful technique is to send an invalid value:
+
+```json
+{
+  "username": "wiener",
+  "email": "wiener@example.com",
+  "isAdmin": "foo"
+}
+```
+
+If the response changes or validation fails specifically because of `isAdmin`, this can indicate that the server recognizes and processes the parameter.
+
+The field can then be tested with a valid but security-sensitive value:
+
+```json
+{
+  "username": "wiener",
+  "email": "wiener@example.com",
+  "isAdmin": true
+}
+```
+
+If the application binds this value directly to the internal user object without restricting which properties may be modified, the user's privileges may change.
+
+The final step is to verify the effect in the application itself, for example by checking whether previously unavailable administrative functionality becomes accessible.
+
+The important distinction is:
+
+```text
+Hidden field discovered
+≠
+Vulnerability confirmed
+
+Hidden field accepted and applied to a sensitive internal property
+=
+Mass assignment vulnerability
+```
