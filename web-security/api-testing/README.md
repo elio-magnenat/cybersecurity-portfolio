@@ -808,3 +808,229 @@ Server-side parameter pollution is different from mass assignment.
 Mass assignment involves supplying additional object properties that the application automatically binds to an internal object.
 
 Server-side parameter pollution instead involves manipulating the structure or parameters of a request that the application sends to another server-side component.
+
+
+### Testing Server-Side Parameter Pollution in Query Strings
+
+When user-controlled input is reused to build a request to an internal API, query-string syntax can sometimes be injected into that internal request.
+
+Useful characters to test include:
+
+```text
+#
+&
+=
+```
+
+Because these characters have a structural meaning inside URLs, they can help determine whether user input is being safely encoded before it reaches the internal API.
+
+Consider a public request such as:
+
+```http
+GET /userSearch?name=peter&back=/home
+```
+
+The application may internally generate:
+
+```http
+GET /users/search?name=peter&publicProfile=true
+```
+
+The objective is to determine whether manipulating the public `name` parameter can change the structure of this internal request.
+
+#### Truncating the Internal Query String
+
+The `#` character normally introduces a URL fragment.
+
+If it reaches the internal request unencoded, it may cause everything after it to be treated as a fragment rather than part of the query string.
+
+Because a raw `#` would normally be handled by the browser and not sent to the server, it must first be URL-encoded:
+
+```text
+%23
+```
+
+For example:
+
+```http
+GET /userSearch?name=peter%23foo&back=/home
+```
+
+may cause the application to construct:
+
+```http
+GET /users/search?name=peter#foo&publicProfile=true
+```
+
+If the internal HTTP client interprets the `#` as a fragment delimiter, the effective request may become:
+
+```http
+GET /users/search?name=peter
+```
+
+This would remove:
+
+```text
+publicProfile=true
+```
+
+from the query sent to the internal API.
+
+Differences in the response can help determine whether truncation occurred.
+
+For example:
+
+```text
+Normal request
+name=peter
+        ↓
+name=peter&publicProfile=true
+```
+
+versus:
+
+```text
+Injected input
+name=peter%23foo
+        ↓
+name=peter#foo&publicProfile=true
+        ↓
+query potentially truncated after peter
+```
+
+If truncation removes a security-related parameter, it may expose information or functionality that should normally remain restricted.
+
+#### Injecting Additional Parameters
+
+The `&` character separates parameters in a query string.
+
+If an encoded ampersand is decoded before the internal request is sent, it may be possible to introduce another parameter.
+
+The encoded value is:
+
+```text
+%26
+```
+
+For example:
+
+```http
+GET /userSearch?name=peter%26foo=xyz&back=/home
+```
+
+may result in the internal request:
+
+```http
+GET /users/search?name=peter&foo=xyz&publicProfile=true
+```
+
+The additional parameter does not need to be valid during initial testing.
+
+A deliberately unknown parameter such as:
+
+```text
+foo=xyz
+```
+
+can help determine whether the structure of the internal query has been modified.
+
+An unchanged response does not necessarily mean the injection failed. The internal API may simply ignore unknown parameters.
+
+#### Injecting Valid Parameters
+
+Once parameter injection appears possible, known or suspected API parameters can be tested.
+
+For example, if an `email` parameter has been discovered elsewhere:
+
+```http
+GET /userSearch?name=peter%26email=foo&back=/home
+```
+
+may become:
+
+```http
+GET /users/search?name=peter&email=foo&publicProfile=true
+```
+
+The response can then be compared with the original request to determine whether the injected parameter affects the internal API.
+
+Parameters discovered during API reconnaissance, error analysis, or hidden-parameter testing are particularly useful candidates.
+
+#### Overriding Existing Parameters
+
+A stronger test is to inject another parameter with the same name as one that already exists.
+
+For example:
+
+```http
+GET /userSearch?name=peter%26name=carlos&back=/home
+```
+
+may produce:
+
+```http
+GET /users/search?name=peter&name=carlos&publicProfile=true
+```
+
+The internal API now receives two `name` parameters.
+
+How duplicate parameters are interpreted depends on the server-side technology.
+
+Possible behaviors include:
+
+```text
+First value wins
+name=peter
+
+Last value wins
+name=carlos
+
+Values are combined
+name=peter,carlos
+```
+
+For example, the behavior described in the training material differs between technologies:
+
+- PHP commonly uses the last value.
+- ASP.NET may combine duplicate values.
+- Node.js / Express may use the first value.
+
+Because duplicate-parameter handling varies, the response must always be observed rather than assuming how the backend will behave.
+
+If the injected value overrides the original one, sensitive parameters may potentially be manipulated.
+
+For example:
+
+```text
+name=peter
+```
+
+could potentially become:
+
+```text
+name=administrator
+```
+
+if the internal API accepts the injected duplicate parameter.
+
+### Testing Strategy
+
+A practical testing sequence is:
+
+```text
+Known user-controlled parameter
+        ↓
+Test encoded query syntax
+        ↓
+Try truncation with %23
+        ↓
+Try parameter injection with %26
+        ↓
+Test a known valid parameter
+        ↓
+Inject a duplicate parameter
+        ↓
+Compare the application's responses
+```
+
+The important goal is to determine whether user-controlled input can modify the structure of the server-side request, rather than simply changing the value of the original parameter.
