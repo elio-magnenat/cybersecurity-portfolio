@@ -613,3 +613,102 @@ Hidden field accepted and applied to a sensitive internal property
 =
 Mass assignment vulnerability
 ```
+
+
+## Preventing API Vulnerabilities
+
+API security should be considered from the design stage rather than added after the API has already been deployed.
+
+A secure API should expose only the functionality and information that clients actually need.
+
+### Protect API documentation
+
+API documentation can reveal a large part of the application's attack surface, including endpoints, parameters, supported methods, and request formats.
+
+Documentation that is not intended to be public should therefore require appropriate access controls.
+
+Documentation should also remain accurate and up to date so that developers and authorized security testers have a reliable view of the API.
+
+### Restrict HTTP methods
+
+Each endpoint should accept only the HTTP methods that are actually required.
+
+For example, an endpoint intended only to retrieve information should not unexpectedly support methods such as:
+
+```text
+POST
+PATCH
+DELETE
+```
+
+Using an explicit allowlist of permitted methods reduces the risk of exposing unused or unintended functionality.
+
+### Validate content types
+
+Endpoints should verify that requests use the expected content type.
+
+For example, if an endpoint is designed to accept JSON:
+
+```http
+Content-Type: application/json
+```
+
+it should not automatically accept XML or other formats unless they are intentionally supported and protected.
+
+Different parsers and processing paths can introduce different security risks.
+
+### Avoid overly informative errors
+
+API errors should provide enough information for legitimate clients to understand that a request failed without unnecessarily revealing internal implementation details.
+
+Responses should avoid exposing information such as:
+
+- Internal object structures
+- Sensitive parameter names
+- Framework or database details
+- Internal paths
+- Debug information
+
+Detailed diagnostic information should be kept in server-side logs rather than exposed directly to clients.
+
+### Protect every API version
+
+Security controls should be applied consistently across all active API versions.
+
+For example:
+
+```text
+/api/v1/
+/api/v2/
+/api/v3/
+```
+
+Older versions should not remain accessible with weaker authentication, validation, or authorization controls simply because a newer version exists.
+
+Unused API versions should be removed or disabled when they are no longer required.
+
+### Prevent mass assignment
+
+Applications should explicitly control which object properties users are allowed to modify.
+
+For example, if users should only be able to update:
+
+```text
+username
+email
+```
+
+the application should allow only those fields rather than automatically binding every supplied parameter to the internal user object.
+
+Sensitive properties such as:
+
+```text
+isAdmin
+role
+permissions
+accountStatus
+```
+
+should not be writable through normal user-controlled requests.
+
+The safest approach is to maintain an explicit allowlist of properties that may be updated and prevent sensitive internal fields from being modified through client input.
