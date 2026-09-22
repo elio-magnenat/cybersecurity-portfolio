@@ -249,6 +249,124 @@ From the external target's point of view, these requests may appear to originate
 
 This means SSRF can potentially be used not only to access internal systems, but also to make the vulnerable server participate in attacks against other systems.
 
+## Circumventing Common SSRF Defenses
+
+Applications that make server-side requests often include protections intended to prevent users from accessing sensitive destinations.
+
+However, these protections can sometimes be bypassed when they rely on incomplete URL validation, simple string matching, or assumptions about how URLs and IP addresses are represented.
+
+A common example is a blacklist that blocks known dangerous values such as:
+
+```text
+127.0.0.1
+localhost
+/admin
+```
+
+The problem is that the same destination can sometimes be represented in several different ways.
+
+### SSRF with Blacklist-Based Input Filters
+
+A blacklist-based defense attempts to reject specific hostnames, IP addresses, paths, or strings considered dangerous.
+
+For example:
+
+```text
+Blocked:
+127.0.0.1
+localhost
+/admin
+```
+
+If the filter only compares strings, an attacker may be able to express the same destination differently.
+
+Possible techniques include:
+
+- Alternative IP address representations
+- URL encoding
+- Case variations
+- Domains that resolve to an internal address
+- Redirects through an attacker-controlled server
+
+#### Alternative IP Representations
+
+The IPv4 loopback address:
+
+```text
+127.0.0.1
+```
+
+can sometimes be written in other formats while still resolving to the same host.
+
+Examples include:
+
+```text
+127.0.0.1
+127.1
+2130706433
+017700000001
+```
+
+Depending on the URL parser and networking library, these values may all refer to the same loopback address.
+
+This can bypass a filter that only checks whether the literal string `127.0.0.1` appears in the input.
+
+#### Encoding and String Variations
+
+Filters based on simple string matching may also be bypassed by changing how blocked values are represented.
+
+Examples include:
+
+- URL-encoding characters
+- Changing character case where the parser treats values case-insensitively
+- Encoding parts of a path
+
+The important issue is that the application may validate one representation while the underlying URL parser interprets another.
+
+#### DNS-Based Bypasses
+
+Another possibility is to use a domain name that resolves to an internal or loopback IP address.
+
+Conceptually:
+
+```text
+Attacker-controlled domain
+        ↓ DNS
+127.0.0.1
+```
+
+A filter that checks only the hostname string may consider the domain safe even though the resolved IP address points to a restricted destination.
+
+#### Redirect-Based Bypasses
+
+An attacker-controlled URL may also redirect the server to another destination.
+
+For example:
+
+```text
+Vulnerable application
+        ↓
+https://attacker-controlled.example
+        ↓ HTTP redirect
+http://127.0.0.1/admin
+```
+
+If the application validates only the initial URL but automatically follows redirects, the final destination may bypass the original SSRF protection.
+
+Different redirect status codes or protocol changes may also affect how the application processes the destination.
+
+### Key Principle
+
+The general problem with blacklist-based SSRF protection is that the same resource may have multiple valid representations.
+
+```text
+Different input
+      ↓
+Same destination
+```
+
+A filter that blocks only known strings may therefore miss alternative ways of reaching the same internal system.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
