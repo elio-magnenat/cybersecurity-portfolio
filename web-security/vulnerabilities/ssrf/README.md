@@ -89,30 +89,70 @@ Two common scenarios are:
 
 In both cases, the attacker attempts to use the vulnerable server's position and network access to reach functionality that would normally be unavailable from the Internet.
 
-### SSRF against the local server
-A common SSRF attack happens when an attacker makes the application send a request back to the same server.
-This can be done using local addresses such as:
-- `127.0.0.1`
-- `localhost`
+### SSRF Attacks Against the Server
 
-For example, an application may allow the user to provide the URL of a back-end API:
+A common SSRF scenario occurs when an attacker makes the vulnerable application send an HTTP request back to the same server that hosts the application.
+
+This usually involves loopback addresses such as:
+
+```text
+127.0.0.1
+localhost
+```
+
+These addresses refer to the local machine itself.
+
+For example, an application may allow the client to supply the URL of a back-end service used to retrieve stock information:
+
 ```text
 stockApi=http://stock.example.net/product/stock
 ```
-If this value is not properly restricted, an attacker may replace it with:
 
-`stockApi=http://localhost/admin`
+If the application accepts this value without sufficient restrictions, an attacker may replace it with a local URL:
 
-The web application then sends the request to its own local administrative endpoint.
-This can be dangerous because some internal functionality may trust requests coming from the local machine and apply weaker access controls.
-As a result, the attacker may use the vulnerable server to access functionality that cannot normally be reached directly from the internet.
-Some applications trust requests coming from the local machine more than requests coming from external users.
-This can happen for several reasons:
-- Access control may be enforced by another component in front of the application server. A request sent directly from the server to itself may bypass this component.
-- Administrative functionality may intentionally allow local access without authentication for maintenance or recovery purposes.
-- Sensitive services may run on different local ports that are not exposed to external users.
+```text
+stockApi=http://localhost/admin
+```
 
-Because of these trust relationships, an SSRF vulnerability can allow an attacker to reach privileged functionality by making the server send the request from a trusted location.
+The vulnerable application then makes the request itself:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+http://localhost/admin
+```
+
+The response from the local administrative interface may then be returned to the attacker.
+
+### Why Local Requests May Be Trusted
+
+This becomes especially dangerous when the application treats requests originating from the local machine differently from normal external requests.
+
+Possible reasons include:
+
+- Access control may be enforced by a separate component in front of the application server. A request made directly from the server to itself may bypass this component.
+- Administrative functionality may allow unauthenticated local access for recovery purposes.
+- Sensitive administrative interfaces may listen on a different port that is not directly reachable from external users.
+
+This creates a trust relationship:
+
+```text
+External request
+    ↓
+Normal access controls
+
+Local request
+    ↓
+Trusted differently
+    ↓
+Sensitive functionality
+```
+
+An SSRF vulnerability can therefore allow an attacker to make the application access functionality that would normally be protected from external users.
+
+The important point is that the attacker is not bypassing the access controls directly. Instead, they make the trusted server send the request from a location that the application already considers privileged.
 
 ### SSRF against other back-end systems
 
