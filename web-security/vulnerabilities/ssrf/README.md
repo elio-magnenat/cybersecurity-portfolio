@@ -98,18 +98,44 @@ If the application accepts a user-controlled URL, an attacker may be able to mak
 This is dangerous because internal systems sometimes have weaker security controls. They may trust requests coming from the internal network or may not require authentication at all.
 In this situation, the vulnerable web server acts as a bridge between the attacker and systems that should normally remain inaccessible from the outside.
 
-## Impact 
-The impact of an SSRF vulnerability depends on which systems and resources the vulnerable server can access. 
-A successful SSRF attack may allow an attacker to: 
-- Access internal services that are not exposed to the internet
-- Reach administrative interfaces protected only by network restrictions
-- Discover hosts, ports, and services inside the internal network
-- Read sensitive information returned by internal APIs
-- Access cloud metadata services and potentially obtain temporary credentials
-- Perform privileged actions on internal applications
-- Make requests to external systems using the vulnerable server's network identity
+## Impact of SSRF Attacks
 
-In some cases, SSRF can be used as a first step toward further attacks. For example, an attacker may first use SSRF to discover an internal service and then interact with that service to access sensitive data or administrative functionality. The severity therefore depends heavily on the network privileges of the vulnerable server and on the security controls applied to the internal services it can reach.
+A successful SSRF attack can allow an attacker to make the vulnerable application access resources or perform actions that should not normally be available to them.
+
+The impact may affect:
+
+- The vulnerable application itself
+- Internal services
+- Other back-end systems that the application can reach
+
+Depending on the exposed internal functionality, SSRF may result in:
+
+- Unauthorized access to internal data
+- Unauthorized actions on internal systems
+- Access to back-end services that are not exposed publicly
+- In some cases, arbitrary command execution
+
+The security impact therefore depends heavily on what systems the vulnerable application is able to communicate with.
+
+### Requests to External Systems
+
+SSRF is not limited to internal infrastructure.
+
+If an attacker can force the application to connect to an external third-party system, the vulnerable server may be used to send malicious requests to other targets.
+
+Conceptually:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+External target
+```
+
+From the external target's point of view, these requests may appear to originate from the organization hosting the vulnerable application rather than from the attacker directly.
+
+This means SSRF can potentially be used not only to access internal systems, but also to make the vulnerable server participate in attacks against other systems.
 
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
