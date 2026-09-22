@@ -58,7 +58,37 @@ This can be dangerous because the server may have access to:
 - External services
 - Sensitive information or credentials returned by these services
 
-## Common vulnerable patterns
+## Common SSRF Attacks
+
+SSRF attacks often exploit trust relationships that exist between systems.
+
+The vulnerable application may be trusted more than an external user because it is running:
+
+- On the same server as sensitive functionality
+- Inside the organization's internal network
+- In an environment where back-end services accept requests from trusted internal sources
+
+An attacker can abuse this trust by making the vulnerable application send requests on their behalf.
+
+Conceptually:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+Trusted internal access
+    ↓
+Sensitive functionality
+```
+
+Two common scenarios are:
+
+- SSRF against the application server itself
+- SSRF against other back-end systems
+
+In both cases, the attacker attempts to use the vulnerable server's position and network access to reach functionality that would normally be unavailable from the Internet.
+
 ### SSRF against the local server
 A common SSRF attack happens when an attacker makes the application send a request back to the same server.
 This can be done using local addresses such as:
