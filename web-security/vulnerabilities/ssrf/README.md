@@ -1,4 +1,55 @@
 # Server-Side Request Forgery (SSRF)
+
+## What is SSRF?
+
+Server-Side Request Forgery (SSRF) is a vulnerability that allows an attacker to make a server-side application send requests to locations that were not intended by the application.
+
+Instead of the attacker connecting directly to the target system, the vulnerable application performs the request on their behalf.
+
+Conceptually:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+Unintended destination
+```
+
+The destination may be:
+
+- An internal service that is not directly accessible from the Internet
+- Another system within the organization's infrastructure
+- An arbitrary external server
+
+For example, an application may normally make a server-side request to retrieve information from a legitimate service.
+
+If the destination of that request can be influenced by user input, an attacker may be able to redirect the request toward another location.
+
+```text
+Normal behavior:
+
+User
+  ↓
+Application
+  ↓
+Expected service
+```
+
+```text
+SSRF:
+
+Attacker-controlled input
+        ↓
+Application
+        ↓
+Unexpected internal or external service
+```
+
+This can expose systems or information that the attacker could not access directly.
+
+In some cases, SSRF can also cause sensitive information, such as authorization credentials, to be sent to another system.
+
 Server-Side Request Forgery (SSRF) is a vulnerability that allows an attacker to make the server send requests to locations that were not intended by the application.
 Instead of the attacker connecting directly to the target, the vulnerable web server makes the request for them.
 This can be dangerous because the server may have access to:
