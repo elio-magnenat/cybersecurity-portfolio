@@ -154,19 +154,61 @@ An SSRF vulnerability can therefore allow an attacker to make the application ac
 
 The important point is that the attacker is not bypassing the access controls directly. Instead, they make the trusted server send the request from a location that the application already considers privileged.
 
-### SSRF against other back-end systems
+### SSRF Attacks Against Other Back-End Systems
 
-An SSRF vulnerability can also be used to make the application server send requests to other internal systems.
-These back-end systems may use private IP addresses and may not be directly reachable from the internet.
+An SSRF vulnerability can also allow an attacker to make the application server send requests to other internal systems.
 
-For example, an internal administrative service may be available at:
+These back-end systems may use private IP addresses and may not be directly reachable from the Internet.
 
-`http://192.168.0.68/admin`
+For example:
 
-If the application accepts a user-controlled URL, an attacker may be able to make the server request this internal address.
+```text
+192.168.0.68
+```
 
-This is dangerous because internal systems sometimes have weaker security controls. They may trust requests coming from the internal network or may not require authentication at all.
-In this situation, the vulnerable web server acts as a bridge between the attacker and systems that should normally remain inaccessible from the outside.
+may identify an internal server that external users cannot normally access.
+
+Conceptually:
+
+```text
+Attacker
+    ↓
+Public application
+    ↓
+Internal network
+    ↓
+Back-end system
+```
+
+This can be dangerous because internal systems are often protected mainly by the network topology.
+
+Since they are not expected to receive requests directly from the Internet, they may have weaker security controls or expose sensitive functionality without authentication.
+
+For example, an internal administrative interface may exist at:
+
+```text
+http://192.168.0.68/admin
+```
+
+If the application contains an SSRF vulnerability, an attacker may modify a user-controlled URL such as:
+
+```text
+stockApi=http://192.168.0.68/admin
+```
+
+The application server then sends the request to the internal system on the attacker's behalf.
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+http://192.168.0.68/admin
+```
+
+This effectively turns the vulnerable application into a bridge between the attacker and systems that are normally isolated from external users.
+
+The key security issue is that internal network access should not be treated as equivalent to authorization. A service should not expose sensitive functionality simply because the request originates from another internal system.
 
 ## Impact of SSRF Attacks
 
