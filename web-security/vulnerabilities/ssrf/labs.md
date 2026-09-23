@@ -90,3 +90,72 @@ After accessing the internal admin interface, I used the same SSRF mechanism to 
 
 This lab demonstrated why blacklist-based SSRF defenses are unreliable. Different representations of the same IP address and multiple decoding stages can allow an attacker to reach a destination that simple string-based filters attempt to block.
 
+### PortSwigger — SSRF with filter bypass via open redirection vulnerability
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Server-Side Request Forgery (SSRF) — Open Redirect Filter Bypass
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application contained a stock check feature that performed server-side requests using a user-controlled `stockApi` parameter.
+
+The objective was to reach an internal administration interface located at:
+
+```text
+http://192.168.0.12:8080/admin
+```
+
+and delete the `carlos` user.
+
+Directly changing the `stockApi` parameter to another host was blocked because the stock checker was restricted to URLs belonging to the local application.
+
+While examining the application's navigation, I found that the "next product" functionality used a user-controlled `path` parameter in an HTTP redirect.
+
+For example:
+
+```text
+/product/nextProduct?path=http://example.com
+```
+
+caused the application to redirect to the supplied destination.
+
+This created an open redirect that could be combined with the SSRF vulnerability.
+
+Instead of supplying the internal address directly to the stock checker, I supplied a local application URL containing the internal destination inside the redirect parameter:
+
+```text
+/product/nextProduct?path=http://192.168.0.12:8080/admin
+```
+
+The SSRF filter accepted the initial URL because it pointed to the permitted application.
+
+The request flow was therefore:
+
+```text
+Stock checker
+      ↓
+Allowed local URL
+      ↓
+Open redirect
+      ↓
+http://192.168.0.12:8080/admin
+```
+
+Because the HTTP client followed the redirect, the server eventually made a request to the otherwise blocked internal administration interface.
+
+After reaching the admin interface, I modified the redirect target to request the administrative action used to delete the `carlos` user and solved the lab.
+
+This lab demonstrated that validating only the initial destination of an SSRF request is insufficient when redirects are automatically followed.
+
+A trusted URL can become an intermediate step:
+
+```text
+Allowed URL
+    ↓
+Redirect
+    ↓
+Restricted internal destination
+```
+
+SSRF protections therefore need to consider the final destination reached after redirects, not only the first URL supplied by the user.
+
