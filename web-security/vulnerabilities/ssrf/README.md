@@ -536,6 +536,104 @@ Whitelist-based SSRF defenses can fail when they validate URLs using simple stri
 
 The security decision should be based on the final parsed and resolved destination, not merely on whether an expected hostname appears somewhere in the user-controlled URL.
 
+### Bypassing SSRF Filters via Open Redirection
+
+An SSRF filter can sometimes be bypassed by chaining the SSRF vulnerability with an open redirect.
+
+An open redirect occurs when an application allows a user-controlled value to determine where the browser or server is redirected.
+
+For example:
+
+```text
+/product/nextProduct?currentProductId=6&path=http://evil-user.net
+```
+
+may return a redirect to:
+
+```text
+http://evil-user.net
+```
+
+This becomes useful in SSRF when the application only allows requests to trusted domains.
+
+For example, the vulnerable application may only accept URLs belonging to:
+
+```text
+weliketoshop.net
+```
+
+A direct SSRF request to an internal system such as:
+
+```text
+http://192.168.0.68/admin
+```
+
+would therefore be rejected by the filter.
+
+However, if the trusted domain contains an open redirect, the attacker can submit a URL that initially points to the allowed domain:
+
+```text
+http://weliketoshop.net/product/nextProduct?currentProductId=6&path=http://192.168.0.68/admin
+```
+
+The application validates the URL and sees:
+
+```text
+Host = weliketoshop.net
+```
+
+so the request is allowed.
+
+The server then requests the trusted URL:
+
+```text
+Vulnerable application
+        ↓
+weliketoshop.net/product/nextProduct
+```
+
+The open redirect responds with:
+
+```text
+Location: http://192.168.0.68/admin
+```
+
+If the HTTP client automatically follows redirects, the application then makes another request to:
+
+```text
+http://192.168.0.68/admin
+```
+
+The complete flow is:
+
+```text
+Attacker
+    ↓
+SSRF parameter contains allowed domain
+    ↓
+SSRF filter accepts the URL
+    ↓
+Request sent to trusted application
+    ↓
+Open redirect
+    ↓
+Internal target
+```
+
+This technique works because the security check is applied to the initial URL, while the final destination is changed later through an HTTP redirect.
+
+### Key Principle
+
+The important distinction is:
+
+```text
+URL validated by the filter
+        ≠
+Final URL reached by the HTTP client
+```
+
+If redirects are followed automatically, an attacker may be able to use a trusted host as an intermediate step to reach an otherwise blocked internal destination.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
