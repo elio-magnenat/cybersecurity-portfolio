@@ -634,6 +634,76 @@ Final URL reached by the HTTP client
 
 If redirects are followed automatically, an attacker may be able to use a trusted host as an intermediate step to reach an otherwise blocked internal destination.
 
+## Blind SSRF Vulnerabilities
+
+Blind SSRF occurs when an attacker can cause the application to make a server-side request to a supplied URL, but the response from that request is not returned to the attacker.
+
+In a normal SSRF scenario, the application may send a request to an internal system and return the response:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+Internal system
+    ↓
+Response
+    ↓
+Attacker sees the result
+```
+
+With blind SSRF, the request is still sent, but the response is not exposed:
+
+```text
+Attacker
+    ↓
+Vulnerable application
+    ↓
+Internal system
+    ↓
+Response
+    X
+Not returned to attacker
+```
+
+The attacker therefore knows that the application may be making a server-side request, but cannot directly inspect the response from the destination.
+
+This makes blind SSRF more difficult to identify and exploit than regular SSRF.
+
+### Impact of Blind SSRF
+
+Blind SSRF generally provides less direct access to back-end data because the response cannot simply be read by the attacker.
+
+For example, if the server requests:
+
+```text
+http://internal-system/secret
+```
+
+the internal server may return sensitive information, but that information is not included in the application's response.
+
+This limits straightforward data extraction.
+
+However, blind SSRF can still be dangerous.
+
+Depending on the reachable back-end systems and the functionality exposed by them, an attacker may be able to trigger actions without seeing the response.
+
+In some situations, this can ultimately lead to serious consequences such as remote code execution on the vulnerable server or another reachable back-end component.
+
+### Key Difference
+
+The main difference between regular SSRF and blind SSRF is visibility of the back-end response:
+
+```text
+Regular SSRF
+Request sent → Response returned to attacker
+
+Blind SSRF
+Request sent → Response hidden from attacker
+```
+
+The server-side request still occurs in both cases. The difficulty with blind SSRF is proving that the request happened and exploiting it without directly seeing the result.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
