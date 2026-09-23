@@ -704,6 +704,106 @@ Request sent → Response hidden from attacker
 
 The server-side request still occurs in both cases. The difficulty with blind SSRF is proving that the request happened and exploiting it without directly seeing the result.
 
+### Finding and Exploiting Blind SSRF Vulnerabilities
+
+Because blind SSRF does not return the back-end response to the attacker, detecting it through the application's normal response can be difficult.
+
+A reliable approach is to use out-of-band testing techniques, often referred to as OAST.
+
+The idea is to provide the application with a URL pointing to an external system that can be monitored.
+
+For example:
+
+```text
+https://unique-id.attacker-controlled.example
+```
+
+If the vulnerable application performs a server-side request to this URL, the external system records the interaction.
+
+The testing flow becomes:
+
+```text
+Attacker
+    ↓
+Supplies monitored URL
+    ↓
+Vulnerable application
+    ↓
+Server-side request
+    ↓
+External monitored system
+    ↓
+Interaction observed
+```
+
+The attacker does not need the application to return the response. Observing the outgoing interaction is enough to demonstrate that the application attempted to contact the supplied destination.
+
+An OAST service such as Burp Collaborator can generate unique domains and record interactions with them.
+
+For example:
+
+```text
+https://random-id.oast-domain.example
+```
+
+This unique identifier makes it possible to associate an observed interaction with a particular test request.
+
+#### DNS Interaction vs HTTP Interaction
+
+When testing blind SSRF, it is possible to observe a DNS lookup without seeing a subsequent HTTP request.
+
+For a hostname such as:
+
+```text
+random-id.oast-domain.example
+```
+
+the application normally needs to determine its IP address first:
+
+```text
+Hostname
+    ↓
+DNS lookup
+    ↓
+IP address
+    ↓
+HTTP connection
+```
+
+An observed DNS lookup therefore indicates that the application attempted to resolve the supplied hostname.
+
+However, the HTTP connection may still be prevented afterwards.
+
+For example:
+
+```text
+Application
+    ↓
+DNS lookup                  ✓ allowed
+    ↓
+Obtains destination IP
+    ↓
+Outbound HTTP connection    ✗ blocked
+```
+
+This can happen when network-level controls allow outbound DNS traffic but restrict HTTP connections to unexpected external destinations.
+
+### Key Principle
+
+Blind SSRF detection does not depend on seeing the response from the requested resource.
+
+Instead, the tester looks for evidence that the application made, or attempted to make, an outbound network request:
+
+```text
+Normal SSRF:
+send URL → server requests it → response becomes visible
+
+Blind SSRF:
+send URL → server requests it → response hidden
+                           ↓
+                  external interaction observed
+```
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
