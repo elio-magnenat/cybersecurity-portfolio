@@ -367,6 +367,175 @@ Same destination
 
 A filter that blocks only known strings may therefore miss alternative ways of reaching the same internal system.
 
+### SSRF with Whitelist-Based Input Filters
+
+Some applications attempt to prevent SSRF by allowing requests only when the supplied URL appears to contain an approved hostname.
+
+For example, an application may try to allow only:
+
+```text
+expected-host
+```
+
+This approach can become vulnerable when the validation logic and the component that actually performs the HTTP request interpret the URL differently.
+
+The general problem is:
+
+```text
+User-controlled URL
+        ↓
+Security filter parses it
+        ↓
+HTTP client parses it
+```
+
+If both components disagree about which part of the URL represents the destination, an attacker may be able to make the filter accept one host while the HTTP client connects to another.
+
+#### Credentials Before the Hostname
+
+URLs can contain user information before the hostname using the `@` character.
+
+For example:
+
+```text
+https://expected-host:fakepassword@evil-host
+```
+
+This URL can be broken down as:
+
+```text
+https://
+expected-host:fakepassword
+@
+evil-host
+```
+
+The important point is that:
+
+```text
+expected-host:fakepassword
+```
+
+is interpreted as user information, while the actual hostname is:
+
+```text
+evil-host
+```
+
+A weak filter that only checks whether the URL begins with `expected-host` may therefore accept the URL even though the HTTP request is sent to `evil-host`.
+
+#### URL Fragments
+
+The `#` character introduces a URL fragment.
+
+For example:
+
+```text
+https://evil-host#expected-host
+```
+
+The hostname is:
+
+```text
+evil-host
+```
+
+while:
+
+```text
+expected-host
+```
+
+belongs to the fragment.
+
+Fragments are normally not part of the HTTP request sent to the destination server.
+
+A weak filter that simply searches the entire input for `expected-host` may therefore accept the URL even though the real destination is `evil-host`.
+
+#### Abusing the DNS Naming Hierarchy
+
+A required hostname can also be included as part of a larger domain controlled by an attacker.
+
+For example:
+
+```text
+https://expected-host.evil-host
+```
+
+The actual hostname is:
+
+```text
+expected-host.evil-host
+```
+
+This is a subdomain of:
+
+```text
+evil-host
+```
+
+not of `expected-host`.
+
+If an attacker controls `evil-host`, they can control where this hostname resolves.
+
+A weak filter that only checks whether the string `expected-host` appears somewhere in the URL may incorrectly consider this destination trusted.
+
+#### URL Encoding
+
+URL encoding can sometimes create differences between what the validation code examines and what the HTTP client eventually interprets.
+
+For example, characters that have a structural meaning in a URL may be encoded:
+
+```text
+@
+→
+%40
+```
+
+If one component validates the encoded representation but another component decodes it before parsing the URL, they may interpret the destination differently.
+
+The same problem can occur with double encoding.
+
+For example:
+
+```text
+%2540
+    ↓ first decoding
+%40
+    ↓ second decoding
+@
+```
+
+This is particularly useful when different processing layers decode the input a different number of times.
+
+#### Combining Techniques
+
+Whitelist bypasses often involve combining several URL features.
+
+For example, an attacker may combine:
+
+- User information with `@`
+- URL fragments with `#`
+- Attacker-controlled subdomains
+- URL encoding
+- Double encoding
+
+The objective is always the same:
+
+```text
+Filter interprets URL as allowed
+             ↓
+HTTP client interprets destination differently
+             ↓
+Request reaches unintended host
+```
+
+### Key Principle
+
+Whitelist-based SSRF defenses can fail when they validate URLs using simple string operations instead of consistently parsing and validating the actual destination.
+
+The security decision should be based on the final parsed and resolved destination, not merely on whether an expected hostname appears somewhere in the user-controlled URL.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
