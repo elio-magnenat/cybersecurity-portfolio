@@ -804,6 +804,93 @@ send URL → server requests it → response hidden
                   external interaction observed
 ```
 
+#### Exploiting Blind SSRF Beyond Detection
+
+Confirming that an application performs out-of-band HTTP requests does not automatically make a blind SSRF vulnerability easy to exploit.
+
+Because the response from the back-end request is not returned to the attacker, blind SSRF cannot normally be used to directly browse or retrieve content from internal systems.
+
+However, the ability to make the server send requests can still be useful.
+
+#### Probing Internal Systems
+
+A blind SSRF vulnerability can potentially be used to send requests to systems reachable from the application server.
+
+For example:
+
+```text
+Application server
+        ↓
+10.0.0.5
+10.0.0.6
+10.0.0.7
+...
+```
+
+Even though the responses are hidden, specially crafted requests can be used to test whether internal systems are vulnerable to known issues.
+
+If a tested vulnerability itself produces an observable out-of-band interaction, the result can still be detected.
+
+The general flow becomes:
+
+```text
+Blind SSRF
+    ↓
+Request sent to internal system
+    ↓
+Payload triggers vulnerable behavior
+    ↓
+Internal system makes external interaction
+    ↓
+OAST interaction observed
+```
+
+This makes it possible to probe internal address ranges without directly seeing the responses returned by those systems.
+
+#### Attacking the Server's HTTP Client
+
+Another possible exploitation path is to make the vulnerable application connect to a server controlled by the attacker.
+
+```text
+Vulnerable application
+        ↓
+HTTP request
+        ↓
+Attacker-controlled server
+```
+
+The attacker can then control the HTTP response returned to the application.
+
+If the HTTP client or networking implementation used by the application contains a serious vulnerability, a specially crafted response could potentially exploit that component.
+
+Conceptually:
+
+```text
+Blind SSRF
+    ↓
+Application connects to attacker-controlled server
+    ↓
+Malicious HTTP response
+    ↓
+Vulnerability in HTTP client
+    ↓
+Potential remote code execution
+```
+
+In this scenario, the SSRF vulnerability is used to make the application consume attacker-controlled network data.
+
+### Key Principle
+
+Blind SSRF limits visibility, but it does not necessarily limit the attacker's ability to influence where the server sends requests.
+
+The attacker may still use that capability to:
+
+- Probe internal systems using payloads with observable out-of-band effects.
+- Cause the application to connect to attacker-controlled infrastructure.
+- Potentially exploit vulnerabilities in the application's HTTP client or in reachable internal services.
+
+The main limitation remains the same: the attacker cannot directly see the back-end response and must rely on side effects or out-of-band interactions.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
