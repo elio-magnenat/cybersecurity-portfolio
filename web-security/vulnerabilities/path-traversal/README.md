@@ -396,6 +396,76 @@ Checking only that a supplied path starts with an expected directory is not suff
 
 The application must resolve and normalize the complete path first, then verify that the final canonical path still remains inside the intended base directory.
 
+### File Extension Validation and Null Byte Bypass
+
+Some applications require a user-supplied filename to end with an expected extension, such as:
+
+```text
+.png
+```
+
+A simple validation rule might therefore reject any value that does not appear to end with the required extension.
+
+In some environments, this check can be bypassed using a null byte.
+
+For example:
+
+```text
+../../../etc/passwd%00.png
+```
+
+The application-level validation may see a value ending in:
+
+```text
+.png
+```
+
+and accept it.
+
+After URL decoding, however, `%00` represents a null byte:
+
+```text
+%00
+↓
+NUL (\x00)
+```
+
+Some lower-level APIs historically treat a null byte as the end of a string. If that happens, the filesystem operation may effectively receive only:
+
+```text
+../../../etc/passwd
+```
+
+while the validation logic previously evaluated the longer value:
+
+```text
+../../../etc/passwd%00.png
+```
+
+Conceptually:
+
+```text
+Validation layer:
+../../../etc/passwd%00.png
+                       ↑
+                    ends in .png ✓
+
+        ↓ URL decoding / lower-level handling
+
+Filesystem layer:
+../../../etc/passwd
+        ↑
+null byte terminates the path
+```
+
+This technique is implementation-dependent. Modern languages, frameworks, and filesystem APIs often reject embedded null bytes, but vulnerable processing chains may still expose this mismatch.
+
+#### Key Principle
+
+Extension validation is unsafe if the string checked by the application is not the same effective path later used by the filesystem.
+
+Security checks should be performed on the final decoded and canonicalized path rather than relying only on a filename suffix.
+
 ## Limitations
 A path traversal vulnerability does not automatically give access to every file on the server.
 The attacker can only read files that are accessible to the operating system account running the web application.
