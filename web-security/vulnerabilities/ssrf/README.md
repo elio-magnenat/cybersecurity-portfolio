@@ -974,6 +974,42 @@ Server performs request
 
 The main question is how much influence the attacker has over the final destination.
 
+### URLs Within Data Formats
+
+Some applications accept structured data formats that can contain URLs.
+
+Depending on the format and the parser used by the application, those URLs may be requested automatically during processing.
+
+A common example is XML.
+
+XML has historically been widely used to exchange structured data between clients and servers. If an application accepts XML input and parses it, the parser may process constructs that reference external resources.
+
+This can create an attack surface for XML External Entity (XXE) injection.
+
+In some cases, XXE can also be used to trigger server-side requests, resulting in SSRF.
+
+Conceptually:
+
+```text
+User-controlled XML
+        ↓
+Application parses XML
+        ↓
+XML references external resource
+        ↓
+Parser performs request
+        ↓
+Server-side request occurs
+```
+
+This means a potential SSRF vulnerability may be hidden inside a data format rather than appearing directly as a URL parameter.
+
+### Key Principle
+
+When looking for SSRF, it is important to consider not only obvious URL parameters but also structured data formats whose parsers may automatically fetch external resources.
+
+XXE-based SSRF is one example of this behavior and is covered in more detail as part of XXE injection vulnerabilities.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
