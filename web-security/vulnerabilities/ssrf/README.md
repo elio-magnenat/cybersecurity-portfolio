@@ -1010,6 +1010,56 @@ When looking for SSRF, it is important to consider not only obvious URL paramete
 
 XXE-based SSRF is one example of this behavior and is covered in more detail as part of XXE injection vulnerabilities.
 
+### SSRF via the Referer Header
+
+Some applications use server-side analytics systems to track where visitors come from.
+
+These systems may record the HTTP `Referer` header, which can contain the URL of the page that referred the visitor.
+
+For example:
+
+```http
+Referer: https://external-site.example/article
+```
+
+In some cases, the analytics software does more than simply log this value. It may automatically visit URLs found in the `Referer` header in order to analyze the referring page and its content.
+
+This creates a potential SSRF attack surface.
+
+Conceptually:
+
+```text
+Attacker controls Referer header
+        ↓
+Application logs the Referer
+        ↓
+Server-side analytics processes the URL
+        ↓
+Analytics software visits the supplied URL
+        ↓
+Server-side request occurs
+```
+
+The SSRF behavior may therefore not be visible in the application's main functionality.
+
+Instead, it can be triggered indirectly by background systems such as analytics components.
+
+### Key Principle
+
+When looking for SSRF vulnerabilities, user-controlled URLs can appear in more places than obvious request parameters.
+
+Headers such as `Referer` may also influence server-side components that perform outbound requests.
+
+```text
+User-controlled header
+        ↓
+Background server-side processing
+        ↓
+Outbound request
+```
+
+This makes HTTP headers another potential hidden attack surface for SSRF.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
