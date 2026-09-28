@@ -34,11 +34,106 @@ On Windows, the closest equivalent is the SAM database. It is a logical database
 On macOS, local account information is usually stored in several files rather than in one direct equivalent of `/etc/shadow`. These records can be found under directories such as: `/private/var/db/dslocal/nodes/Default/users/`
 A path traversal vulnerability could theoretically target these files, but only if the web application process has permission to read them. Path traversal bypasses application path restrictions, not operating system permissions.
 
-## How path traversal works
-A path traversal vulnerability usually occurs when an application uses user input to build a file path on the server.
-For example, an application may receive the name of an image or document from a URL parameter and use it to locate the requested file.
-If the application does not properly validate this input, an attacker may manipulate the path and make the server access a file outside the intended directory.
-The server then reads the file with the permissions of the web application process.
+## How Path Traversal Works
+
+A path traversal vulnerability usually occurs when an application uses user-controlled input to construct a filesystem path.
+
+For example, an application may load product images using a request such as:
+
+```http
+GET /loadImage?filename=218.png
+```
+
+If the application stores its images in:
+
+```text
+/var/www/images/
+```
+
+it may construct the final path by simply appending the supplied filename:
+
+```text
+/var/www/images/218.png
+```
+
+If the application does not safely validate or normalize the user-controlled value, an attacker may supply directory traversal sequences such as:
+
+```text
+../
+```
+
+Each `../` moves one directory level upward.
+
+For example:
+
+```text
+filename=../../../etc/passwd
+```
+
+may cause the application to construct:
+
+```text
+/var/www/images/../../../etc/passwd
+```
+
+Resolving the traversal sequences gives:
+
+```text
+/etc/passwd
+```
+
+The application may therefore return a file located completely outside the intended image directory.
+
+Conceptually:
+
+```text
+/var/www/images/
+        ↓ ../
+/var/www/
+        ↓ ../
+/var/
+        ↓ ../
+/
+        ↓
+/etc/passwd
+```
+
+On Unix-like systems, `/etc/passwd` is commonly used in training environments to demonstrate arbitrary file reading.
+
+Windows systems can also be vulnerable. Both forward and backslash traversal sequences may be accepted:
+
+```text
+../
+..\
+```
+
+For example:
+
+```text
+..\..\..\windows\win.ini
+```
+
+could escape from the intended directory and reach:
+
+```text
+C:\Windows\win.ini
+```
+
+The exact files that can be accessed still depend on the permissions of the operating system account running the application.
+
+### Key Principle
+
+The vulnerability appears when user-controlled path components are combined with a trusted base directory without ensuring that the final resolved path remains inside that directory.
+
+```text
+Trusted base directory
+        +
+User-controlled filename
+        ↓
+Filesystem resolves ../ sequences
+        ↓
+Final path escapes intended directory
+```
 
 ## Common vulnerable patterns
 Path traversal vulnerabilities often appear in features that read or manage files on the server.
