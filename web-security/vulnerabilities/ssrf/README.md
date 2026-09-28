@@ -891,6 +891,30 @@ The attacker may still use that capability to:
 
 The main limitation remains the same: the attacker cannot directly see the back-end response and must rely on side effects or out-of-band interactions.
 
+## Finding Hidden Attack Surface for SSRF Vulnerabilities
+
+Some SSRF vulnerabilities are relatively easy to identify because the application's normal requests contain parameters with complete URLs.
+
+For example:
+
+```text
+stockApi=http://internal-system.example
+```
+
+In this situation, the application is clearly using user-controlled input to determine where the server sends a request.
+
+However, SSRF attack surfaces are not always this obvious.
+
+The application may construct the destination indirectly, accept only part of a URL, or derive the final request from other user-controlled data.
+
+This means SSRF testing should not focus only on parameters that visibly contain complete URLs.
+
+### Key Principle
+
+A server-side request may still be influenced by user input even when the complete destination URL is not directly visible in the request.
+
+The next step is therefore to look for less obvious ways in which user-controlled data can affect the destination of a back-end request.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
