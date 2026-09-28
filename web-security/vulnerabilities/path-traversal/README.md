@@ -148,6 +148,64 @@ Common examples include:
 
 The common pattern is that the application uses user-controlled input, such as a file name or path, to access a file on the server without safely restricting the final location.
 
+## Common Obstacles to Exploiting Path Traversal Vulnerabilities
+
+Applications often implement defenses intended to prevent directory traversal sequences from escaping the expected directory.
+
+For example, an application may reject or remove values containing:
+
+```text
+../
+```
+
+However, blocking traversal sequences does not necessarily prevent access to arbitrary files.
+
+### Absolute Path Bypass
+
+If the application accepts absolute filesystem paths, an attacker may be able to reference the target file directly without using any traversal sequence.
+
+Instead of:
+
+```text
+../../../etc/passwd
+```
+
+the attacker may try:
+
+```text
+/etc/passwd
+```
+
+The important difference is that an absolute path starts directly from the filesystem root:
+
+```text
+/etc/passwd
+↑
+filesystem root
+```
+
+This means there is no need to move upward through the directory structure using `../`.
+
+Conceptually:
+
+```text
+Defense:
+blocks ../
+
+Attacker:
+uses /etc/passwd directly
+
+Result:
+no traversal sequence is present,
+but the requested file may still be outside the intended directory
+```
+
+### Key Principle
+
+Blocking specific traversal strings such as `../` is not sufficient if the application still allows the user to supply an absolute path.
+
+A secure implementation must control the final resolved filesystem location, not only reject individual traversal patterns.
+
 ## Limitations
 A path traversal vulnerability does not automatically give access to every file on the server.
 The attacker can only read files that are accessible to the operating system account running the web application.
