@@ -14,8 +14,8 @@ Completed learning paths:
 | SQL injection | 51 / 51 | 26 Aug 2026 |
 | Authentication vulnerabilities | 55 / 55 | 17 Sep 2026 |
 | API testing | 29 / 29 | 21 Sep 2026 |
-
-**Next learning path:** Server-side request forgery (SSRF) attacks.
+| Server-side request forgery (SSRF) | 23 / 23 | 28 Sep 2026 |
+| Path traversal | 14 / 14 | 28 Sep 2026 |
 
 ## Quick navigation
 
@@ -26,6 +26,7 @@ Completed learning paths:
   - [SQL Injection](web-security/vulnerabilities/sql-injection/README.md)
   - [Authentication Vulnerabilities](web-security/vulnerabilities/authentication-vulnerabilities/README.md)
   - [Server-Side Request Forgery (SSRF)](web-security/vulnerabilities/ssrf/README.md)
+  - [Path Traversal](web-security/vulnerabilities/path-traversal/README.md)
 
 ## Repository structure
 
