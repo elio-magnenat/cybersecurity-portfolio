@@ -1,11 +1,20 @@
 # Path Traversal
 
-Path traversal, also known as directory traversal, enables an attacker to read arbitrary files on the server.
+Path traversal, also known as directory traversal, is a vulnerability that can allow an attacker to access files outside the directory that an application is intended to use.
 
-These files can include:
+In many cases, the main impact is arbitrary file reading.
+
+This may expose:
+
 - Application code and data
 - Credentials for back-end systems
 - Sensitive operating system files
+
+In some situations, path traversal can also affect file-writing functionality.
+
+If an attacker can control where the application writes a file, they may be able to modify application data or behavior. Depending on the application and the permissions of the affected process, this can significantly increase the impact of the vulnerability.
+
+Path traversal does not bypass operating system permissions. The application can only access files that its own process is permitted to read or modify.
 
 ## Application code and data
 This category includes source code, configuration files, files uploaded by users, and application logs.
