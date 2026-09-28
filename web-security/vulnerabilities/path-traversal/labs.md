@@ -105,3 +105,59 @@ The response returned the contents of `/etc/passwd`, solving the lab.
 
 This lab demonstrated why removing traversal patterns with a single string-replacement pass is not a reliable defense. The sanitization process can itself produce a valid traversal sequence if nested input is used.
 
+### PortSwigger — File path traversal, traversal sequences stripped with superfluous URL-decode
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Path Traversal — Double URL-Encoding Bypass
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application loaded product images using a user-controlled `filename` parameter.
+
+It attempted to block path traversal sequences before performing an additional URL-decoding step. This created a mismatch between the representation checked by the filter and the representation later used by the application.
+
+I used the following payload:
+
+```text
+..%252f..%252f..%252fetc/passwd
+```
+
+The encoded separator is processed in stages:
+
+```text
+%252f
+   ↓ first decoding
+%2f
+   ↓ second decoding
+/
+```
+
+As a result, the supplied value eventually becomes equivalent to:
+
+```text
+../../../etc/passwd
+```
+
+The traversal sequence therefore appears only after the application's filtering step has already taken place.
+
+Conceptually:
+
+```text
+Attacker input
+..%252f..%252f..%252fetc/passwd
+        ↓
+Filter does not see the final ../ sequences
+        ↓
+Additional URL decoding
+        ↓
+../../../etc/passwd
+        ↓
+Filesystem resolves the path
+        ↓
+/etc/passwd
+```
+
+The response returned the contents of `/etc/passwd`, solving the lab.
+
+This lab demonstrated that path validation can fail when filtering and URL decoding occur in the wrong order. Security checks must be applied to the final canonical path rather than to an earlier encoded representation.
+
