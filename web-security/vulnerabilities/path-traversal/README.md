@@ -343,6 +343,59 @@ Path traversal defenses can fail when sanitization and URL decoding happen at di
 
 The important question is not only whether `../` is blocked, but which representation of the path is checked and which representation is ultimately passed to the filesystem.
 
+### Required Base Path Bypass
+
+Some applications validate that the user-supplied filename begins with an expected base directory.
+
+For example, the application may require paths to start with:
+
+```text
+/var/www/images
+```
+
+At first glance, this appears to restrict access to files inside the image directory.
+
+However, if the application only checks the beginning of the supplied path and does not validate the final resolved location, traversal sequences can still escape the directory.
+
+For example:
+
+```text
+/var/www/images/../../../etc/passwd
+```
+
+The value satisfies the initial check because it begins with:
+
+```text
+/var/www/images
+```
+
+but the filesystem resolves the traversal sequences afterwards:
+
+```text
+/var/www/images/../../../etc/passwd
+        ↓
+/etc/passwd
+```
+
+Conceptually:
+
+```text
+Validation:
+"path starts with /var/www/images" ✓
+
+Filesystem resolution:
+../ moves outside the allowed directory
+
+Final path:
+/etc/passwd
+```
+
+#### Key Principle
+
+Checking only that a supplied path starts with an expected directory is not sufficient.
+
+The application must resolve and normalize the complete path first, then verify that the final canonical path still remains inside the intended base directory.
+
 ## Limitations
 A path traversal vulnerability does not automatically give access to every file on the server.
 The attacker can only read files that are accessible to the operating system account running the web application.
