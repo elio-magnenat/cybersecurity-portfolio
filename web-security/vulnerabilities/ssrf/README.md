@@ -915,6 +915,65 @@ A server-side request may still be influenced by user input even when the comple
 
 The next step is therefore to look for less obvious ways in which user-controlled data can affect the destination of a back-end request.
 
+### Partial URLs in Requests
+
+Some applications do not accept a complete URL from the user.
+
+Instead, they may accept only a hostname or part of a URL path, then build the complete destination server-side.
+
+For example, the application might receive:
+
+```text
+internal-service
+```
+
+and construct:
+
+```text
+https://internal-service/some/path
+```
+
+Or it might receive only a path such as:
+
+```text
+/api/status
+```
+
+and append it to a fixed server:
+
+```text
+https://internal.example/api/status
+```
+
+This can still expose a server-side request attack surface because user-controlled input influences the destination requested by the application.
+
+However, exploitation may be more limited than in a classic SSRF vulnerability.
+
+If the application controls part of the final URL, the attacker may not be able to freely choose:
+
+- The protocol
+- The hostname
+- The port
+- The full path
+
+The exact impact therefore depends on which parts of the final URL are user-controlled.
+
+### Key Principle
+
+A parameter does not need to contain a complete URL to be relevant for SSRF testing.
+
+Even partial control over a server-side request can create an attack surface:
+
+```text
+User-controlled fragment
+        ↓
+Application builds full URL
+        ↓
+Server performs request
+```
+
+The main question is how much influence the attacker has over the final destination.
+
 ## Prevention
 Preventing SSRF requires controlling where the server is allowed to send requests rather than simply blocking a few dangerous addresses.
 ### Restrict allowed destinations
