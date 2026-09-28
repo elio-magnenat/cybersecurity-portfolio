@@ -473,21 +473,107 @@ For example, if the application does not have permission to read `/etc/shadow` o
 Path traversal bypasses the application's intended directory restrictions, but it does not normally bypass operating system permissions.
 
 ## Prevention
-The safest solution is to avoid using user-controlled input directly as a file path.
-Whenever possible, the application should use an internal identifier instead of accepting a file name or path from the user. The server can then map this identifier to a known file.
-If user input must be used, the application should:
-- Use an allowlist of accepted values
-- Resolve and normalize the final path
-- Verify that the resolved path remains inside the intended directory
-- Reject absolute paths and unexpected path separators
-- Avoid relying only on blocking patterns such as `../`
-- Store public and sensitive files in separate directories
-- Run the application with the minimum required permissions
-- Avoid exposing internal file paths in error messages
 
-The principle of least privilege is also important. The operating system account running the web application should only have access to the files required by the application.
+The most effective way to prevent path traversal is to avoid passing user-controlled input directly to filesystem APIs.
 
-This does not fix the vulnerability itself, but it limits the damage if a path traversal vulnerability is exploited.
+Whenever possible, the application should use an internal identifier or another fixed mapping instead of allowing the user to supply a filename or path.
+
+If user-controlled input must be used in a filesystem operation, two layers of defense should be applied.
+
+### 1. Validate the Input
+
+The preferred approach is to compare the supplied value against an allowlist of permitted values.
+
+For example, instead of accepting an arbitrary filename:
+
+```text
+filename=../../../etc/passwd
+```
+
+the application could accept only known identifiers or expected filenames.
+
+If a strict allowlist is not practical, the application should restrict the input to the smallest possible set of permitted characters and formats.
+
+The goal is to avoid accepting unexpected path syntax in the first place.
+
+### 2. Canonicalize and Validate the Final Path
+
+After validating the input, the application should combine it with the intended base directory and use the platform filesystem API to canonicalize the resulting path.
+
+Canonicalization resolves path elements such as:
+
+```text
+.
+..
+```
+
+and produces the effective filesystem location.
+
+For example:
+
+```text
+/var/www/images/../../../etc/passwd
+```
+
+canonicalizes to:
+
+```text
+/etc/passwd
+```
+
+The application should then verify that the canonical path is still inside the expected base directory before accessing the file.
+
+Conceptually:
+
+```text
+User input
+    ↓
+Validate against allowed values
+    ↓
+Append to trusted base directory
+    ↓
+Canonicalize final path
+    ↓
+Verify it remains inside the base directory
+    ↓
+Access file
+```
+
+A simplified Java example is:
+
+```java
+File file = new File(BASE_DIRECTORY, userInput);
+
+if (file.getCanonicalPath().startsWith(BASE_DIRECTORY)) {
+    // process file
+}
+```
+
+The important point is that validation must consider the final canonical path rather than only the original string supplied by the user.
+
+### Key Principle
+
+Path traversal defenses should not rely only on blocking individual patterns such as:
+
+```text
+../
+```
+
+Different encodings, absolute paths, nested traversal sequences, or other representations may bypass string-based filtering.
+
+The safer approach is:
+
+```text
+avoid user-controlled paths when possible
+            ↓
+validate allowed input
+            ↓
+canonicalize the final path
+            ↓
+verify the final location
+```
+
+The application should also run with the minimum filesystem permissions required for its normal operation. This does not prevent path traversal itself, but it can reduce the impact if a vulnerability is present.
 
 ## Detection and testing
 I first browse the application and look for features that display, download, upload, or manage files. I pay attention to parameters that may contain a file name or a path, such as `file`, `filename`, `path`, `document`, or `template`.
