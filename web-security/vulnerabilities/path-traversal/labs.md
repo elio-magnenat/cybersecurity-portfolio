@@ -215,3 +215,50 @@ Final path:
 
 This lab demonstrated that checking only the beginning of a path is not sufficient. Validation must be performed against the final normalized path to ensure that it still remains inside the intended base directory.
 
+### PortSwigger — File path traversal, validation of file extension with null byte bypass
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Path Traversal — Null Byte Extension Validation Bypass
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application loaded product images using a user-controlled `filename` parameter.
+
+It validated that the supplied filename ended with the expected image extension, which prevented a direct request for an arbitrary file such as:
+
+```text
+../../../etc/passwd
+```
+
+I bypassed the extension check by appending a URL-encoded null byte followed by the required extension:
+
+```text
+../../../etc/passwd%00.png
+```
+
+At the validation layer, the supplied value still appeared to end with:
+
+```text
+.png
+```
+
+After URL decoding, however, `%00` represented a null byte. In the vulnerable processing chain, this caused the effective file path to terminate before the extension.
+
+Conceptually:
+
+```text
+Validation sees:
+../../../etc/passwd%00.png
+                       ↑
+                    .png accepted
+
+        ↓ decoding / lower-level path handling
+
+Effective path:
+../../../etc/passwd
+```
+
+The response returned the contents of `/etc/passwd`, solving the lab.
+
+This lab demonstrated that validating only the apparent filename extension can fail when the value checked by the application differs from the path ultimately interpreted by the filesystem or a lower-level API.
+
