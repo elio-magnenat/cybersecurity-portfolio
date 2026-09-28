@@ -1,6 +1,35 @@
 # Path Traversal Labs
 
-- PortSwigger — File path traversal, simple case
+### PortSwigger — File path traversal, simple case
+
+- **Difficulty:** Apprentice
+- **Vulnerability:** Path Traversal — Arbitrary File Read
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application loaded product images using a user-controlled `filename` parameter.
+
+A normal request referenced an image stored inside the application's image directory. Because the supplied filename was used to construct the filesystem path without sufficient validation, I replaced it with a traversal path:
+
+```text
+../../../etc/passwd
+```
+
+The application combined this value with its image directory and the filesystem resolved the traversal sequences outside the intended location.
+
+Conceptually:
+
+```text
+/var/www/images/
+        +
+../../../etc/passwd
+        ↓
+/etc/passwd
+```
+
+The response returned the contents of `/etc/passwd`, demonstrating an arbitrary file read and solving the lab.
+
+This lab demonstrated the basic path traversal pattern: user-controlled path input can escape an intended directory when the application does not validate the final resolved filesystem location.
 
 ### PortSwigger — File path traversal, traversal sequences blocked with absolute path bypass
 
