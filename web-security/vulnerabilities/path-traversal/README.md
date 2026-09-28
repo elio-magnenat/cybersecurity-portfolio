@@ -269,6 +269,80 @@ Removing traversal patterns only once is unreliable because the removal itself c
 
 The final resolved path must be validated rather than relying on simple string replacement.
 
+### URL-Encoding Traversal Sequences
+
+In some contexts, traversal sequences may be removed before the input reaches the application.
+
+For example, a web server or framework may detect and strip:
+
+```text
+../
+```
+
+from a URL path or from a `filename` value in a multipart request.
+
+If the filtering and decoding steps happen in a different order, encoded traversal sequences may bypass this protection.
+
+A normal traversal sequence can be URL-encoded as:
+
+```text
+../
+↓
+%2e%2e%2f
+```
+
+where:
+
+```text
+%2e = .
+%2f = /
+```
+
+If the filter checks the encoded input before decoding it, it may fail to recognize the traversal sequence.
+
+A second possibility is double URL encoding:
+
+```text
+../
+↓ first encoding
+%2e%2e%2f
+↓ second encoding
+%252e%252e%252f
+```
+
+The value `%25` represents the `%` character, so after one decoding pass:
+
+```text
+%252e%252e%252f
+↓
+%2e%2e%2f
+```
+
+and after another decoding pass:
+
+```text
+%2e%2e%2f
+↓
+../
+```
+
+If sanitization occurs before the final decoding stage, the traversal sequence may therefore reappear after the filter has already finished.
+
+Some environments may also interpret non-standard encoded separators, such as:
+
+```text
+..%c0%af
+..%ef%bc%8f
+```
+
+Whether these forms work depends on the web server, framework, URL decoder, and filesystem handling involved.
+
+#### Key Principle
+
+Path traversal defenses can fail when sanitization and URL decoding happen at different stages.
+
+The important question is not only whether `../` is blocked, but which representation of the path is checked and which representation is ultimately passed to the filesystem.
+
 ## Limitations
 A path traversal vulnerability does not automatically give access to every file on the server.
 The attacker can only read files that are accessible to the operating system account running the web application.
