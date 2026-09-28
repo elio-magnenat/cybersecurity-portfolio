@@ -206,6 +206,69 @@ Blocking specific traversal strings such as `../` is not sufficient if the appli
 
 A secure implementation must control the final resolved filesystem location, not only reject individual traversal patterns.
 
+### Nested Traversal Sequences
+
+Some applications attempt to prevent path traversal by removing sequences such as:
+
+```text
+../
+```
+
+If this sanitization is performed only once, it may be possible to use nested traversal sequences.
+
+For example:
+
+```text
+....//
+```
+
+contains a traversal sequence inside a larger string.
+
+If the application removes the inner `../` sequence once, the result becomes:
+
+```text
+../
+```
+
+The sanitization process has therefore created a valid traversal sequence.
+
+With multiple nested sequences:
+
+```text
+....//....//....//etc/passwd
+```
+
+a non-recursive filter may transform the input into:
+
+```text
+../../../etc/passwd
+```
+
+which can then escape the intended directory.
+
+Conceptually:
+
+```text
+Attacker input
+....//
+
+    ↓ remove ../ once
+
+../
+
+    ↓ no second validation
+
+Valid traversal sequence remains
+```
+
+The same idea can apply to alternative path separators, depending on how the application and operating system interpret paths.
+
+#### Key Principle
+
+Removing traversal patterns only once is unreliable because the removal itself can create new traversal sequences.
+
+The final resolved path must be validated rather than relying on simple string replacement.
+
 ## Limitations
 A path traversal vulnerability does not automatically give access to every file on the server.
 The attacker can only read files that are accessible to the operating system account running the web application.
