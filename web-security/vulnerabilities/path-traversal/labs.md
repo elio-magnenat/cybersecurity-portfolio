@@ -161,3 +161,57 @@ The response returned the contents of `/etc/passwd`, solving the lab.
 
 This lab demonstrated that path validation can fail when filtering and URL decoding occur in the wrong order. Security checks must be applied to the final canonical path rather than to an earlier encoded representation.
 
+### PortSwigger — File path traversal, validation of start of path
+
+- **Difficulty:** Practitioner
+- **Vulnerability:** Path Traversal — Base Path Validation Bypass
+- **Result:** Solved
+- **Tool used:** Burp Suite Repeater
+
+The application loaded product images using a user-controlled `filename` parameter.
+
+Unlike the previous labs, the application expected the complete file path and checked that the supplied value started with the intended image directory:
+
+```text
+/var/www/images
+```
+
+A direct path to an arbitrary file would therefore fail this initial validation.
+
+I kept the required directory prefix and appended traversal sequences:
+
+```text
+/var/www/images/../../../etc/passwd
+```
+
+The supplied value passed the application's prefix check because it still began with the expected directory.
+
+The filesystem then resolved the traversal sequences:
+
+```text
+/var/www/images/../../../etc/passwd
+        ↓
+/etc/passwd
+```
+
+The response returned the contents of `/etc/passwd`, solving the lab.
+
+Conceptually:
+
+```text
+Application validation:
+starts with /var/www/images ✓
+
+        ↓
+
+Filesystem normalization:
+../ escapes the allowed directory
+
+        ↓
+
+Final path:
+/etc/passwd
+```
+
+This lab demonstrated that checking only the beginning of a path is not sufficient. Validation must be performed against the final normalized path to ensure that it still remains inside the intended base directory.
+
