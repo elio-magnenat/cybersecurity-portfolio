@@ -70,17 +70,70 @@ If the application trusts the `Content-Type` header without checking the actual 
 For this reason, file type validation should not rely only on the MIME type declared in the HTTP request.
 
 ## Impact
-The impact of a file upload vulnerability depends on what files can be uploaded and how the server handles them.
-A successful attack may allow an attacker to:
 
-- Upload and execute server-side scripts
-- Achieve remote code execution through a web shell
-- Read sensitive files stored on the server
-- Modify or overwrite files if the web application has sufficient permissions
-- Upload malicious content that could affect other users
-- Consume server storage by uploading very large files
+The impact of a file upload vulnerability depends mainly on two factors:
 
-In the most serious cases, an attacker may gain significant control over the server by executing commands with the permissions of the web application.
+- Which properties of the uploaded file are not validated correctly, such as its type, filename, contents, or size.
+- What the server allows the uploaded file to do after it has been stored.
+
+### Executable File Uploads
+
+The most serious case occurs when the application does not properly validate the file type and the server is configured to execute uploaded server-side scripts.
+
+For example, if files such as:
+
+```text
+.php
+.jsp
+```
+
+can be uploaded into an executable location, an attacker may be able to deploy a web shell.
+
+A web shell can provide a way to execute commands or interact with the server through HTTP requests, potentially leading to remote code execution and significant control over the compromised system.
+
+Conceptually:
+
+```text
+Dangerous file uploaded
+        ↓
+Stored in executable location
+        ↓
+Requested through HTTP
+        ↓
+Server executes the file as code
+        ↓
+Potential remote code execution
+```
+
+### Overwriting Existing Files
+
+If the application does not safely validate or generate filenames, an attacker may be able to upload a file using the same name as an existing file.
+
+Depending on how the server handles uploads, this could overwrite application data or other important files.
+
+If file upload functionality can also be combined with a path traversal weakness, the attacker may be able to influence where the file is written and reach locations outside the intended upload directory.
+
+### Denial of Service Through File Size
+
+If the application does not enforce reasonable file size limits, an attacker may be able to upload very large files or many files until the server's available storage is exhausted.
+
+This can result in a denial-of-service condition by preventing the application or other services from writing additional data.
+
+### Key Principle
+
+The impact of an upload vulnerability is not determined only by whether an unexpected file can be uploaded.
+
+It also depends on what happens after the upload:
+
+```text
+What can be uploaded?
+        +
+Where is it stored?
+        +
+How does the server process it?
+        ↓
+Overall impact
+```
 
 ## Prevention
 File upload functionality should use several security controls together rather than relying on a single check.
