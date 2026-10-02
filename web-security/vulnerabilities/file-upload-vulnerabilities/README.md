@@ -195,25 +195,60 @@ Server configuration determines:
 ```
 
 ## Common vulnerable patterns
-### Unrestricted upload of executable files
-One of the most dangerous file upload vulnerabilities happens when an application allows users to upload server-side scripts such as PHP files.
-If the server stores the uploaded file in a location where it can be executed, an attacker may upload a web shell.
-A web shell is a malicious script that allows commands or actions to be executed on the server through HTTP requests.
-For example, a PHP file could read a file from the server:
+### Exploiting Unrestricted File Uploads to Deploy a Web Shell
 
-`<?php echo file_get_contents('/path/to/target/file'); ?>`
+One of the most dangerous file upload scenarios occurs when an application allows users to upload server-side scripts and the web server is configured to execute those files.
 
-When the uploaded PHP file is requested, the server executes the script and returns the content of the target file.
-A more powerful web shell can execute commands provided through a URL parameter:
+Examples of server-side script types include PHP, Java, and Python.
 
-`<?php echo system($_GET['command']); ?>`
+If an attacker can upload such a file into an executable location, they may be able to deploy a web shell.
 
-For example:
+A web shell is a server-side script that can be triggered through HTTP requests to perform actions on the server.
 
-`GET /uploads/exploit.php?command=id`
+For example, a simple PHP script could read a file from the server:
 
-In this case, PHP reads the `command` parameter and passes its value to the operating system. The command is executed with the permissions of the account running the web application.
-This can turn a file upload vulnerability into remote code execution and may give an attacker significant control over the server.
+```php
+<?php echo file_get_contents('/path/to/target/file'); ?>
+```
+
+Once uploaded, requesting that script can cause the server to execute it and return the target file's contents.
+
+A more flexible example is:
+
+```php
+<?php echo system($_GET['command']); ?>
+```
+
+A request such as:
+
+```http
+GET /example/exploit.php?command=id HTTP/1.1
+```
+
+passes the value of the `command` parameter to the operating system command execution function.
+
+Conceptually:
+
+```text
+Upload server-side script
+        ↓
+Stored in executable location
+        ↓
+Request uploaded file
+        ↓
+Web server executes script
+        ↓
+Script performs attacker-controlled action
+```
+
+If this is possible, the impact can be severe because the attacker may be able to read or write files, access sensitive data, execute operating system commands, or use the compromised server as a stepping stone toward other systems.
+
+#### Key Principle
+
+Uploading a dangerous file is only part of the vulnerability.
+
+For a web shell to work, the uploaded file must also be stored somewhere that the server will execute it when requested.
+
 ### Flawed file type validation
 Some applications try to validate uploaded files by checking the `Content-Type` value sent with the file.
 For example, a website that only accepts images may allow MIME types such as:
