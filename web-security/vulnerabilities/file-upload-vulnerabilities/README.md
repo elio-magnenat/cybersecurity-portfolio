@@ -1,16 +1,37 @@
 # File Upload Vulnerabilities
-File upload vulnerabilities happen when an application allows users to upload files without properly checking them.
-The application may fail to verify things such as:
 
-- The file name
+File upload vulnerabilities occur when an application allows users to upload files to the server without sufficiently validating properties such as:
+
+- The filename
 - The file type
-- The file content
+- The file contents
 - The file size
 
-If these restrictions are not correctly enforced, an attacker may be able to upload files that were not intended by the application.
-For example, a website that normally accepts images could allow an attacker to upload a server-side script instead.
-If the server executes this file, the attacker may be able to run code on the server.
-In some cases, simply uploading the file can cause a problem. In other cases, the attacker must access the uploaded file afterward to trigger its execution.
+Weak or incorrectly enforced restrictions can allow an attacker to upload files that the application was never intended to accept.
+
+For example, a feature designed to accept profile images might accidentally allow the upload of a server-side script.
+
+If that file is stored in a location where the web server can execute it, the vulnerability may lead to remote code execution.
+
+Depending on how the application processes uploaded files, exploitation may happen in different ways.
+
+In some cases, simply uploading a malicious file is enough to cause an impact.
+
+In other cases, the attacker must make a second HTTP request to the uploaded file in order to trigger processing or execution.
+
+Conceptually:
+
+```text
+User uploads file
+        ↓
+Application validates it incorrectly
+        ↓
+Dangerous file stored on server
+        ↓
+File processed or requested
+        ↓
+Potential security impact
+```
 
 ## Common vulnerable patterns
 ### Weak file validation
