@@ -93,6 +93,107 @@ File upload vulnerabilities often arise not because no defenses exist, but becau
 
 The important question is whether every stage agrees on what the uploaded file actually is and whether the same security rules are enforced consistently from upload to storage and later access.
 
+## How Web Servers Handle Requests for Static Files
+
+To understand why uploaded files can become dangerous, it helps to understand how a web server decides what to do when a file is requested.
+
+Historically, request paths often mapped directly to files and directories on the server's filesystem.
+
+For example:
+
+```text
+GET /images/logo.png
+```
+
+could correspond directly to a file such as:
+
+```text
+/images/logo.png
+```
+
+on the server.
+
+Modern web applications are often dynamic, so a request path does not necessarily correspond directly to a real file. However, web servers still serve static resources such as images, stylesheets, and other files.
+
+When a static file is requested, the server may inspect the file extension and use its configuration to determine the file type and how it should be handled.
+
+Conceptually:
+
+```text
+HTTP request
+    ↓
+Requested path
+    ↓
+Server identifies file extension
+    ↓
+Extension mapped to a file type
+    ↓
+Server decides how to handle the file
+```
+
+### Non-Executable Files
+
+If the requested file type is not executable, the server can simply return its contents to the client.
+
+For example:
+
+```text
+image.png
+    ↓
+Server reads file
+    ↓
+File contents returned in HTTP response
+```
+
+Static HTML files can also be served this way.
+
+### Executable Files
+
+If the requested file type is executable and the server is configured to execute that type, the server runs the file instead of simply returning its source.
+
+For example:
+
+```text
+script.php
+    ↓
+Server recognizes PHP
+    ↓
+PHP code executes
+    ↓
+Generated output returned to client
+```
+
+Before execution, request information such as headers and parameters may be made available to the script.
+
+This behavior is especially important for file upload vulnerabilities because an uploaded server-side script can become dangerous if it is stored in a location where the server will execute it.
+
+### Executable Extension Without an Execution Handler
+
+A server may recognize that a file type is normally executable but not be configured to execute it.
+
+In this situation, the server may return an error.
+
+In some configurations, however, it may serve the file contents as plain text instead.
+
+This can expose source code or other sensitive information.
+
+### Key Principle
+
+The security impact of an uploaded file depends not only on whether the upload succeeds, but also on how the web server handles that file when it is later requested.
+
+```text
+Uploaded file
+    ↓
+Stored on server
+    ↓
+Requested later
+    ↓
+Server configuration determines:
+    ├── return contents
+    ├── execute as code
+    └── reject / expose as text
+```
+
 ## Common vulnerable patterns
 ### Unrestricted upload of executable files
 One of the most dangerous file upload vulnerabilities happens when an application allows users to upload server-side scripts such as PHP files.
