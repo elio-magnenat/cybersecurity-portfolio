@@ -33,13 +33,67 @@ File processed or requested
 Potential security impact
 ```
 
-## Common vulnerable patterns
-### Weak file validation
-Most websites have some protections to prevent users from uploading dangerous files. However, having file upload restrictions does not mean that they are secure. If the validation is incomplete or incorrectly implemented, an attacker may be able to bypass it and upload a file that should normally be rejected. In some cases, this can allow an attacker to upload a server-side script and obtain a web shell, leading to remote code execution.For example, an application may block some dangerous file extensions but forget other extensions that can also be dangerous.
-The application may also check properties of the uploaded file that can be modified by the user. An attacker can change these values using tools such as Burp Suite.
-Another problem can happen when different parts of the application validate files differently. A file may be rejected in one location but accepted in another.
-For this reason, having file upload validation is not enough. The validation must correctly check the uploaded file and be applied consistently.
+## How File Upload Vulnerabilities Arise
 
+Most real applications do not allow completely unrestricted file uploads. Instead, vulnerabilities usually appear because the validation logic is incomplete, inconsistent, or checks properties that the attacker can influence.
+
+### Incomplete Blacklists
+
+An application may try to block dangerous file types by maintaining a blacklist of forbidden extensions.
+
+This approach is fragile because the application may:
+
+- Forget less common but still dangerous file types.
+- Interpret a filename differently from the component that later stores or executes the file.
+- Apply extension checks in a way that can be bypassed by parsing differences.
+
+The general problem is that blocking a list of known-bad values requires the developer to anticipate every dangerous representation.
+
+### Trusting Attacker-Controlled Properties
+
+Some applications decide whether a file is safe by checking metadata or request properties supplied by the client.
+
+If the server trusts values that the user can modify, the validation may not reflect the file that is actually being uploaded.
+
+Conceptually:
+
+```text
+Client sends file + metadata
+        ↓
+Application trusts metadata
+        ↓
+Attacker changes that metadata
+        ↓
+Dangerous file may pass validation
+```
+
+This is why file upload checks should not rely only on values declared by the client.
+
+### Inconsistent Validation
+
+Validation may also be applied differently across the hosts, directories, or components that make up a website.
+
+For example, one part of the application may reject a file while another part handles the same file differently.
+
+This creates discrepancies that can become exploitable when:
+
+```text
+Upload component
+        ↓
+validates file one way
+
+Storage / serving component
+        ↓
+interprets file another way
+```
+
+### Key Principle
+
+File upload vulnerabilities often arise not because no defenses exist, but because the defenses make incorrect assumptions.
+
+The important question is whether every stage agrees on what the uploaded file actually is and whether the same security rules are enforced consistently from upload to storage and later access.
+
+## Common vulnerable patterns
 ### Unrestricted upload of executable files
 One of the most dangerous file upload vulnerabilities happens when an application allows users to upload server-side scripts such as PHP files.
 If the server stores the uploaded file in a location where it can be executed, an attacker may upload a web shell.
