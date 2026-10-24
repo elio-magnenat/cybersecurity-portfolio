@@ -8,14 +8,14 @@ My current focus is **web application security**, with most practical work based
 
 Completed learning paths:
 
-| Learning path | Progress | Completed |
-| --- | ---: | --- |
-| Server-side vulnerabilities | 52 / 52 | 13 Aug 2026 |
-| SQL injection | 51 / 51 | 26 Aug 2026 |
-| Authentication vulnerabilities | 55 / 55 | 17 Sep 2026 |
-| API testing | 29 / 29 | 21 Sep 2026 |
-| Server-side request forgery (SSRF) | 23 / 23 | 28 Sep 2026 |
-| Path traversal | 14 / 14 | 28 Sep 2026 |
+| Learning path | Completed |
+| --- | --- |
+| Server-side vulnerabilities | 13 Aug 2026 |
+| SQL injection | 26 Aug 2026 |
+| Authentication vulnerabilities | 17 Sep 2026 |
+| API testing | 21 Sep 2026 |
+| Server-side request forgery (SSRF) | 28 Sep 2026 |
+| Path traversal | 28 Sep 2026 |
 
 ## Quick navigation
 
